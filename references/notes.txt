@@ -1,0 +1,66 @@
+Construction shadow models. Il y a différents cas possibles.
+
+Pour les inputs:
+
+  Cas i1: on a une base de donnée d'objet réel pouvant être classé par 
+  le ML. Concrétement pour le projet cela veut dire que l'on a accès à 
+  la dataset de test.
+
+  Cas i2: on a une base de donnée d'objets bruités. On peut penser à 
+  des samples confidentiels protégés (cas improbable ? Need 
+  discussion).
+
+  Cas i3: on construit une dataset à partir de quelques échantillons 
+  grâce à des modifications aléatoires.
+
+  Cas i4: on connait la distribution des features. On génère des 
+  échantillons à partir de ces distributions. (Cas des données 
+  médicales).
+
+  Cas i5: on construit une dataset à partir de bruit, modifications 
+  aléatoires voir si adapté avec un algorithme génétique.
+
+Pour les outputs:
+
+  Cas o1: on accès aux labels réèls.
+
+  Cas o2: labels réèls + predictions.
+
+  Cas o3: on requête le ML pour obtenir les infos.
+    Cas o31: ML offline
+    Cas o32: ML online
+
+Pour les modèles:
+
+  Cas m1: le modèle cible, les hyperparamètres et les poids sont connu.
+
+  Cas m2: le modèle cible et les hyperparamètres seulement sont connus.
+
+  Cas m3: seul le modèle cible est connu (nombre de couches et fonction 
+  des couches).
+
+  Cas m4: rien n'est connu.
+
+Techniques de mitigation.
+
+  Cas p1: le modèle n'est pas regularisé (écart accuracy test-training 
+  fort).
+
+  Cas p2: le modèle est régularisé (écart accuracy test-training 
+  faible).
+
+  Cas p3: le modèle est régularisé et ne donne que la log softmax de la 
+  sortie prédite.
+
+  Cas p4: le modèle est régularisé et ne donne que des log softmax 
+  arrondies.
+
+  Cas p5: le modèle est régularisé et ne donne que la log softmax 
+  arrondie de la sortie prédite.
+
+  Cas p6: le modèle ne donne que le label prédit.
+
+  Cas p7: le modèle est differential private.
+    Cas p71: DP-SGD
+    Cas p72: PATE
+
