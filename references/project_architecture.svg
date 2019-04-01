@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.0//EN" "http://www.w3.org/TR/2001/PR-SVG-20010719/DTD/svg10.dtd">
-<svg width="83cm" height="44cm" viewBox="-301 119 1659 862" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<svg width="100cm" height="44cm" viewBox="-301 119 1987 862" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
   <g id="Arrière-plan">
     <g>
       <rect style="fill: #ffffff; fill-opacity: 1; stroke-opacity: 1; stroke-width: 2; stroke: #000000" x="-300" y="140" width="1260" height="840"/>
@@ -95,15 +95,18 @@
       <polyline style="fill: none; stroke-opacity: 1; stroke-width: 2; stroke: #000000" points="1232.38,492.362 1227.38,476.362 1222.38,492.362 "/>
     </g>
     <g>
-      <rect style="fill: #ffffff; fill-opacity: 1; stroke-opacity: 1; stroke-width: 2; stroke: #000000" x="-20" y="680" width="233.3" height="28"/>
-      <text font-size="16" style="fill: #000000; fill-opacity: 1; stroke: none;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:700" x="96.65" y="699">Target_model</text>
-      <rect style="fill: #ffffff; fill-opacity: 1; stroke-opacity: 1; stroke-width: 2; stroke: #000000" x="-20" y="708" width="233.3" height="36"/>
+      <rect style="fill: #ffffff; fill-opacity: 1; stroke-opacity: 1; stroke-width: 2; stroke: #000000" x="-20" y="680" width="264.1" height="28"/>
+      <text font-size="16" style="fill: #000000; fill-opacity: 1; stroke: none;text-anchor:middle;font-family:sans-serif;font-style:normal;font-weight:700" x="112.05" y="699">Target_model</text>
+      <rect style="fill: #ffffff; fill-opacity: 1; stroke-opacity: 1; stroke-width: 2; stroke: #000000" x="-20" y="708" width="264.1" height="36"/>
       <text font-size="12.8" style="fill: #000000; fill-opacity: 1; stroke: none;text-anchor:start;font-family:monospace;font-style:normal;font-weight:normal" x="-17" y="722">+type: enum</text>
       <text font-size="12.8" style="fill: #000000; fill-opacity: 1; stroke: none;text-anchor:start;font-family:monospace;font-style:normal;font-weight:normal" x="-17" y="738">+requester</text>
-      <rect style="fill: #ffffff; fill-opacity: 1; stroke-opacity: 1; stroke-width: 2; stroke: #000000" x="-20" y="744" width="233.3" height="52"/>
+      <rect style="fill: #ffffff; fill-opacity: 1; stroke-opacity: 1; stroke-width: 2; stroke: #000000" x="-20" y="744" width="264.1" height="100"/>
       <text font-size="12.8" style="fill: #000000; fill-opacity: 1; stroke: none;text-anchor:start;font-family:monospace;font-style:normal;font-weight:normal" x="-17" y="758">+set_type(type:enum)</text>
       <text font-size="12.8" style="fill: #000000; fill-opacity: 1; stroke: none;text-anchor:start;font-family:monospace;font-style:normal;font-weight:normal" x="-17" y="774">+get_prediction(input,output)</text>
       <text font-size="12.8" style="fill: #000000; fill-opacity: 1; stroke: none;text-anchor:start;font-family:monospace;font-style:normal;font-weight:normal" x="-17" y="790">-request_mlaas(name)</text>
+      <text font-size="12.8" style="fill: #000000; fill-opacity: 1; stroke: none;text-anchor:start;font-family:monospace;font-style:normal;font-weight:normal" x="-17" y="806">+set_mitigation_level(level:enum)</text>
+      <text font-size="12.8" style="fill: #000000; fill-opacity: 1; stroke: none;text-anchor:start;font-family:monospace;font-style:normal;font-weight:normal" x="-17" y="822">+train()</text>
+      <text font-size="12.8" style="fill: #000000; fill-opacity: 1; stroke: none;text-anchor:start;font-family:monospace;font-style:normal;font-weight:normal" x="-17" y="838">-forward()</text>
     </g>
     <g>
       <rect style="fill: #ffffff; fill-opacity: 1; stroke-opacity: 1; stroke-width: 2; stroke: #000000" x="-40" y="600" width="102.75" height="28"/>
@@ -132,16 +135,42 @@
       <polyline style="fill: none; stroke-opacity: 1; stroke-width: 2; stroke: #000000" points="-9.65,564.358 -14.65,548.358 -19.65,564.358 "/>
     </g>
     <g>
-      <polyline style="fill: none; stroke-opacity: 1; stroke-width: 2; stroke-dasharray: 8; stroke: #000000" points="96.65,678.993 96.65,622 70.4616,622 "/>
+      <polyline style="fill: none; stroke-opacity: 1; stroke-width: 2; stroke-dasharray: 8; stroke: #000000" points="112.05,678.995 112.05,622 70.4616,622 "/>
       <polyline style="fill: none; stroke-opacity: 1; stroke-width: 2; stroke: #000000" points="83.109,617 67.109,622 83.109,627 "/>
     </g>
     <g>
-      <polyline style="fill: none; stroke-opacity: 1; stroke-width: 2; stroke: #000000" points="298.993,782 256.65,782 256.65,738 214.307,738 "/>
-      <polygon style="fill: #000000; fill-opacity: 1; stroke: none" fill-rule="evenodd" points="260.65,760 260.65,752 268.65,756 "/>
+      <polyline style="fill: none; stroke-opacity: 1; stroke-width: 2; stroke: #000000" points="298.993,782 272.051,782 272.051,762 245.108,762 "/>
+      <polygon style="fill: #000000; fill-opacity: 1; stroke: none" fill-rule="evenodd" points="276.051,772 276.051,764 284.051,768 "/>
     </g>
     <g>
       <polyline style="fill: none; stroke-opacity: 1; stroke-width: 2; stroke-dasharray: 8; stroke: #000000" points="978.244,560 1037.5,560 1037.5,654 1098.99,654 "/>
       <polygon style="fill: #ffffff; fill-opacity: 1; stroke-opacity: 1; stroke-width: 2; stroke: #000000" fill-rule="evenodd" points="978.244,552 962.244,560 978.244,568 "/>
+    </g>
+    <g>
+      <polyline style="fill: none; stroke-opacity: 1; stroke-width: 2; stroke-dasharray: 8; stroke: #000000" points="1219.05,820.029 1219.05,758.519 1228.2,758.519 1228.2,695.714 "/>
+      <polyline style="fill: none; stroke-opacity: 1; stroke-width: 2; stroke: #000000" points="1233.2,708.361 1228.2,692.361 1223.2,708.361 "/>
+    </g>
+    <g>
+      <polygon style="fill: #ffffff; fill-opacity: 1; stroke-opacity: 1; stroke-width: 2; stroke: #000000" fill-rule="evenodd" points="1160,820 1266.1,820 1278.1,832 1278.1,886 1160,886 "/>
+      <polyline style="fill: none; stroke-opacity: 1; stroke-width: 1; stroke: #000000" points="1266.1,820 1266.1,832 1278.1,832 "/>
+      <text font-size="12.7998" style="fill: #000000; fill-opacity: 1; stroke: none;text-anchor:start;font-family:monospace;font-style:normal;font-weight:normal" x="1167" y="844.9">
+        <tspan x="1167" y="844.9">Main()</tspan>
+        <tspan xml:space="preserve" x="1167" y="860.9"> a bunch of</tspan>
+        <tspan xml:space="preserve" x="1167" y="876.9"> Experiment()</tspan>
+      </text>
+    </g>
+    <g>
+      <polygon style="fill: #ffffff; fill-opacity: 1; stroke-opacity: 1; stroke-width: 2; stroke: #000000" fill-rule="evenodd" points="1420,620 1672.4,620 1684.4,632 1684.4,686 1420,686 "/>
+      <polyline style="fill: none; stroke-opacity: 1; stroke-width: 1; stroke: #000000" points="1672.4,620 1672.4,632 1684.4,632 "/>
+      <text font-size="12.7998" style="fill: #000000; fill-opacity: 1; stroke: none;text-anchor:start;font-family:monospace;font-style:normal;font-weight:normal" x="1427" y="644.9">
+        <tspan x="1427" y="644.9">In case of an exeption, the </tspan>
+        <tspan x="1427" y="660.9">Experiment ends so intermediary </tspan>
+        <tspan x="1427" y="676.9">results are not lost</tspan>
+      </text>
+    </g>
+    <g>
+      <polyline style="fill: none; stroke-opacity: 1; stroke-width: 2; stroke: #000000" points="1357.41,654 1388.7,654 1388.7,653 1420,653 "/>
+      <polygon style="fill: #000000; fill-opacity: 1; stroke: none" fill-rule="evenodd" points="1392.7,653.5 1392.7,645.5 1400.7,649.5 "/>
     </g>
   </g>
 </svg>
