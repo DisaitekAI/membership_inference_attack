@@ -1,3 +1,7 @@
+import os, sys, inspect
+
+project_dir = os.path.realpath(os.path.dirname(inspect.getfile(inspect.currentframe()))) + "/../../"
+data_dir = project_dir + "/data/"
 
 import torch
 from torchvision import datasets, transforms
@@ -41,7 +45,7 @@ class Dataset_generator:
     """
     if self.method == "academic":
       if self.name == "mnist":
-        return datasets.MNIST('../../data/', train=self.train, download=True,
+        return datasets.MNIST(data_dir, train=self.train, download=True,
                               transform=transforms.Compose([
                                transforms.ToTensor(),
                                transforms.Normalize((0.1307,), (0.3081,))
