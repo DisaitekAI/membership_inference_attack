@@ -1,7 +1,7 @@
 
 import argparse
 
-def conv_output_shape(h_w, kernel_size=1, stride=1, pad=0, dilation=1):
+def conv_output_shape(h_w, kernel_size = 1, stride = 1, pad = 0, dilation = 1):
   """
   Utility function for computing output of convolutions
   takes a tuple of (h,w) and returns a tuple of (h,w)
