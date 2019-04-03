@@ -30,9 +30,9 @@ def test_experiment_mnist_basic():
   target_path = models_path/'test_mnist_model.pt'
   mia_path = models_path/'test_mia_model.pt'
   
-  experiment(academic_dataset = "mnist", 
+  experiment(academic_dataset  = "mnist", 
              target_model_path = target_path.as_posix(),
-             mia_model_path = mia_path.as_posix())
+             mia_model_path    = mia_path.as_posix())
   
   assert target_path.exists()
   assert mia_path.exists()
@@ -47,9 +47,9 @@ def test_experiment_mnist_custom():
   target_path = models_path/'test_mnist_model.pt'
   mia_path = models_path/'test_mia_model.pt'
   
-  experiment(academic_dataset = "mnist", 
-             target_model_path = target_path.as_posix(),
-             mia_model_path = mia_path.as_posix(),
+  experiment(academic_dataset    = "mnist", 
+             target_model_path   = target_path.as_posix(),
+             mia_model_path      = mia_path.as_posix(),
              custom_target_model = OrderedDict([
                ('conv1', nn.Conv2d(1, 10, 3, 1)),
                ('relu1', nn.ReLU()),
@@ -64,7 +64,7 @@ def test_experiment_mnist_custom():
                ('logsoftmax', nn.LogSoftmax(dim=1))
              ]),
              custom_target_optim_args = {'lr' : 0.02, 'momentum' : 0.3},
-             custom_mia_model = OrderedDict([
+             custom_mia_model         = OrderedDict([
                ('dense1', nn.Linear(20, 50)),
                ('tanh', nn.Tanh()),
                ('dense2', nn.Linear(50, 2)),
