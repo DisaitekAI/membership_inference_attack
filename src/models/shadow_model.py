@@ -1,6 +1,9 @@
 import torch
 import torch.utils.data
+import mnist_model.py
+
 shadow_data = torch.utils.data.Dataset
+current_model = Mnist_model
 
 M = 7
 batch_size = 64
@@ -13,3 +16,8 @@ split_shadow_datasets = []
 for dataset in unsplit_shadow_datasets:
   learnable_shadow_dataset = random_split(dataset, batch_size)
   split_shadow_datasets.append(learnable_shadow_dataset)
+
+shadow_models = []
+for split_dataset in split_shadow_datasets:
+  shadow_model = current_model(split_dataset) # pas sûr que ce soit la bonne syntaxe
+  shadow_models.append(shadow_model)
