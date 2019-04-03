@@ -10,8 +10,8 @@ class MIA_model(nn.Module):
     """
     super(MIA_model, self).__init__()
     
-    self.input_size = 0
-    self.hidden_size = 0
+    self.input_size = None
+    self.hidden_size = None
     
     for dictionary in opt_dict:
       for key in dictionary:
@@ -19,12 +19,11 @@ class MIA_model(nn.Module):
     for key in opt_args:
       setattr(self, key, opt_args[key])
       
-    if self.input_size == 0:
-      print("MIA_model error: input size is not set")
-      return
-    else:
-      if self.hidden_size == 0:
-        self.hidden_size = 5 * self.input_size
+    if self.input_size is None:
+      raise ValueError("MIA_model error: input size is not set")
+
+    if self.hidden_size is None:
+      self.hidden_size = 5 * self.input_size
       
     self.dense1 = nn.Linear(self.input_size, self.hidden_size)
     self.dense1_batch_norm = nn.BatchNorm1d(self.hidden_size)

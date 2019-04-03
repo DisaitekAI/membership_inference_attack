@@ -91,11 +91,10 @@ def experiment(*opt_dict, **opt_args):
     all_opts[key] = opt_args[key]
   
   if "mia_model_path" not in all_opts: 
-    print("experiment() error: mia_model_path is not set")
-    return
+    raise ValueError("experiment() error: mia_model_path is not set")
   
   device = torch.device("cuda" if all_opts["use_cuda"] else "cpu")
-  cuda_args = { 'num_workers' : 1, 'pin_memory' : True} if all_opts["use_cuda"] else {}
+  cuda_args = { 'num_workers' : 1, 'pin_memory' : True } if all_opts["use_cuda"] else {}
   
   target = None
   shadow_swarm_dataset = None
@@ -103,8 +102,7 @@ def experiment(*opt_dict, **opt_args):
   # train / load target model if offline
   if all_opts["academic_dataset"] is not None:
     if "target_model_path" not in all_opts:
-      print("experiment() error: target_model_path is not set")
-      return
+      raise ValueError("experiment() error: target_model_path is not set")
       
     # the model has not been trained so we do it here
     if not os.path.isfile(all_opts["target_model_path"]):
@@ -170,7 +168,5 @@ def experiment(*opt_dict, **opt_args):
     test(model, device, test_loader)
 
   torch.save(model, all_opts["mia_model_path"])
-  
-  
-    
-  
+
+

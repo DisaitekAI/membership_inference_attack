@@ -29,8 +29,7 @@ class Target:
         self.offline_model.eval()
         
       else:
-        print("Target: the model path is invalid")
-        return
+        raise ValueError("Target: the model path is invalid")
       
   def predict(vinput):
     if self.offline:
