@@ -101,7 +101,7 @@ def experiment(*opt_dict, **opt_args):
   shadow_swarm_dataset = None
   
   # train / load target model if offline
-  if all_opts["academic_dataset"] != None:
+  if all_opts["academic_dataset"] is not None:
     if "target_model_path" not in all_opts:
       print("experiment() error: target_model_path is not set")
       return
@@ -118,7 +118,7 @@ def experiment(*opt_dict, **opt_args):
       test_loader = torch.utils.data.DataLoader(test_set, batch_size = 1000, shuffle = True, **cuda_args)
       
       model = None
-      if all_opts["custom_target_model"] != None:
+      if all_opts["custom_target_model"] is not None:
         model = nn.Sequential(all_opts["custom_target_model"]).to(device)
       else:
         if all_opts["academic_dataset"] == "mnist":
@@ -152,7 +152,7 @@ def experiment(*opt_dict, **opt_args):
   train_set, test_set = torch.utils.data.random_split(mia_dataset, [train_size, test_size])
   
   mia_model = None
-  if all_opts["custom_mia_model"] != None:
+  if all_opts["custom_mia_model"] is not None:
     mia_model = nn.Sequential(all_opts["custom_mia_model"]).to(device)
   else:
     _, first_output = train_set[0]
