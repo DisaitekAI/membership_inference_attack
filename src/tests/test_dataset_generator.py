@@ -2,10 +2,11 @@ import os, sys, inspect
 
 project_dir = os.path.realpath(os.path.dirname(inspect.getfile(inspect.currentframe()))) + "/../../"
 data_dir = project_dir + "/data/"
+src_data_dir = project_dir + "/src/data/"
 
 # add ../data/ into the path
-if data_dir not in sys.path:
-  sys.path.insert(0, data_dir)
+if src_data_dir not in sys.path:
+  sys.path.insert(0, src_data_dir)
 
 from dataset_generator import Dataset_generator
 import torch

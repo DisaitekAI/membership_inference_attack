@@ -21,3 +21,4 @@ class Mnist_model(nn.Module):
     x = torch.tanh(self.dense1_batch_norm(self.dense1(x)))
     x = self.dense2(x)
     return F.log_softmax(x, dim=1)
+
