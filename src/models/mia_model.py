@@ -8,6 +8,7 @@ class MIA_model(nn.Module):
     :input_size size of the input vector
     :hidden_size size of the hidden layer by default it is 5*input_size
     """
+    super(MIA_model, self).__init__()
     
     self.input_size = 0
     self.hidden_size = 0
@@ -24,8 +25,6 @@ class MIA_model(nn.Module):
     else:
       if self.hidden_size == 0:
         self.hidden_size = 5 * self.input_size
-      
-    super(MIA_model, self).__init__()
       
     self.dense1 = nn.Linear(self.input_size, self.hidden_size)
     self.dense1_batch_norm = nn.BatchNorm1d(self.hidden_size)
