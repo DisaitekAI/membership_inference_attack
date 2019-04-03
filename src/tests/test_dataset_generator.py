@@ -18,12 +18,12 @@ def test_dataset_generator_mnist():
   dg = Dataset_generator(method = "academic", name = "mnist", train = True)
   dataset = dg.generate()
   assert isinstance(dataset, torch.utils.data.Dataset)
-  assert data_path/'MNIST'/'processed'/'training.pt'.exists()
+  assert (data_path/'MNIST'/'processed'/'training.pt').exists()
   
   dg = Dataset_generator(method = "academic", name = "mnist", train = False)
   dataset = dg.generate()
   assert isinstance(dataset, torch.utils.data.Dataset)
-  assert data_path/'MNIST'/'processed'/'test.pt'.exists()
+  assert (data_path/'MNIST'/'processed'/'test.pt').exists()
 
 def main():
   test_dataset_generator_mnist()

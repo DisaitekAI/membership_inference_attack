@@ -20,22 +20,16 @@ class Dataset_generator:
       dg = Dataset_generator(method = "academic", name = "mnist", train = True)
       dataset = dg.generate() # use it as a torch.utils.data.Dataset
   """
-  def __init__(self, *opt_dict, **opt_args):
+  def __init__(self, method = "academic", train = True, name = None):
     """
     :method "academic"
     :name "mnist". The name of an academic dataset
     :train boolean. Get the trainning set or the testing set from an 
       academic dataset.
     """
-    # Setting default attributes values
-    self.train = True
-    
-    # Overriding attributes
-    for dictionary in opt_dict:
-      for key in dictionary:
-        setattr(self, key, dictionary[key])
-    for key in opt_args:
-      setattr(self, key, opt_args[key])
+    self.method = method
+    self.train  = train
+    self.name   = name
 
   def generate(self):
     """

@@ -44,7 +44,7 @@ def test(model, device, test_loader):
       data, target = data.to(device), target.to(device)
       output = model(data)
       test_loss += F.nll_loss(output, target, reduction='sum').item() # sum up batch loss
-      pred = output.argmax(dim=1, keepdim=True) # get the index of the max log-probability
+      pred = output.argmax(dim = 1, keepdim = True) # get the index of the max log-probability
       correct += pred.eq(target.view_as(pred)).sum().item()
 
   test_loss /= len(test_loader.dataset)
@@ -53,7 +53,14 @@ def test(model, device, test_loader):
         test_loss, correct, len(test_loader.dataset),
         100. * correct / len(test_loader.dataset)))
 
-def experiment(*opt_dict, **opt_args):
+def experiment(academic_dataset         = None, 
+               custom_target_model      = None,
+               custom_target_optim_args = None,
+               custom_mia_model         = None,
+               custom_mia_optim_args    = None,
+               use_cuda                 = False,
+               mia_model_path           = None,
+               target_model_path        = None):
   """
   
   start a membership inference attack experiment
@@ -79,53 +86,42 @@ def experiment(*opt_dict, **opt_args):
   :use_cuda False by default
     
   """
-  all_opts = dict()
-  all_opts["academic_dataset"] = None
-  all_opts["custom_target_model"] = None
-  all_opts["custom_target_optim_args"] = None
-  all_opts["custom_mia_model"] = None
-  all_opts["custom_mia_optim_args"] = None
-  all_opts["use_cuda"] = False
-  
-  for dictionary in opt_dict:
-    for key in dictionary:
-      all_opts[key] = dictionary[key]
-  for key in opt_args:
-    all_opts[key] = opt_args[key]
-  
-  if "mia_model_path" not in all_opts: 
+  if mia_model_path is None: 
     raise ValueError("experiment() error: mia_model_path is not set")
   
-  device = torch.device("cuda" if all_opts["use_cuda"] else "cpu")
-  cuda_args = { 'num_workers' : 1, 'pin_memory' : True } if all_opts["use_cuda"] else {}
+  device = torch.device("cuda" if use_cuda else "cpu")
+  cuda_args = { 'num_workers' : 1, 'pin_memory' : True } if use_cuda else {}
   
   target = None
   shadow_swarm_dataset = None
   
   # train / load target model if offline
-  if all_opts["academic_dataset"] is not None:
-    if "target_model_path" not in all_opts:
+  if academic_dataset is not None:
+    if target_model_path is None:
       raise ValueError("experiment() error: target_model_path is not set")
       
     # the model has not been trained so we do it here
-    if not pathlib.Path(all_opts["target_model_path"]).exists():
-      dg = Dataset_generator(method = "academic", name = all_opts["academic_dataset"], train = True)
+    if not pathlib.Path(target_model_path).exists():
+      dg = Dataset_generator(method = "academic", name = academic_dataset, train = True)
       train_set = dg.generate()
       train_loader = torch.utils.data.DataLoader(train_set, batch_size = 64, shuffle = True, **cuda_args)
       
-      dg = Dataset_generator(method = "academic", name = all_opts["academic_dataset"], train = False)
+      dg = Dataset_generator(method = "academic", name = academic_dataset, train = False)
       test_set = dg.generate()
       shadow_swarm_dataset = test_set
       test_loader = torch.utils.data.DataLoader(test_set, batch_size = 1000, shuffle = True, **cuda_args)
       
       model = None
-      if all_opts["custom_target_model"] is not None:
-        model = nn.Sequential(all_opts["custom_target_model"]).to(device)
-      else:
-        if all_opts["academic_dataset"] == "mnist":
+      if custom_target_model is None:
+        if academic_dataset == "mnist":
           model = Mnist_model().to(device)
+      else:
+        model = nn.Sequential(custom_target_model).to(device)
       
-      optim_args = all_opts["custom_target_optim_args"] if all_opts["custom_target_optim_args"] else { 'lr' : 0.01, 'momentum' : 0.5 }
+      optim_args = { 'lr' : 0.01, 'momentum' : 0.5 }
+      if custom_target_optim_args is not None:
+        optim_args = custom_target_optim_args
+        
       optimizer = optim.SGD(model.parameters(), **optim_args)
       
       print("training the target model")
@@ -133,17 +129,12 @@ def experiment(*opt_dict, **opt_args):
         train(model, device, train_loader, optimizer, epoch)
         test(model, device, test_loader)
 
-      torch.save(model, all_opts["target_model_path"])
+      torch.save(model, target_model_path)
       
-    target = Target(model_path = all_opts["target_model_path"])
+    target = Target(model_path = target_model_path)
     if shadow_swarm_dataset is None:
-      dg = Dataset_generator(method = "academic", name = all_opts["academic_dataset"], train = False)
+      dg = Dataset_generator(method = "academic", name = academic_dataset, train = False)
       shadow_swarm_dataset = dg.generate()
-  
-  # ~ # online attack case, not implemented yet
-  # ~ if shadow_swarm_dataset is None
-    # ~ dg = Dataset_generator(method = "random")
-    # ~ shadow_swarm_dataset = dg.generate()
     
   sst = Shadow_swarm_trainer(shadow_swarm_dataset)
   mia_dataset = sst.get_mia_dataset()
@@ -153,23 +144,24 @@ def experiment(*opt_dict, **opt_args):
   train_set, test_set = torch.utils.data.random_split(mia_dataset, [train_size, test_size])
   
   mia_model = None
-  if all_opts["custom_mia_model"] is not None:
-    mia_model = nn.Sequential(all_opts["custom_mia_model"]).to(device)
-  else:
+  if custom_mia_model is None:
     _, first_output = train_set[0]
     mia_model = MIA_model(input_size = len(first_output))
+  else:
+    mia_model = nn.Sequential(custom_mia_model).to(device)
   
   train_loader = torch.utils.data.DataLoader(train_set, batch_size = 64, shuffle = True, **cuda_args)
   test_loader = torch.utils.data.DataLoader(test_set, batch_size = 1000, shuffle = True, **cuda_args)
   
-  optim_args = all_opts["custom_mia_optim_args"] if all_opts["custom_mia_optim_args"] else { 'lr' : 0.01, 'momentum' : 0.5 }
-  optimizer = optim.SGD(model.parameters(), **optim_args)
+  optim_args = { 'lr' : 0.01, 'momentum' : 0.5 }
+  if custom_mia_optim_args is not None:
+    optim_args = custom_mia_optim_args
   
   print("training the MIA model")
   for epoch in range(1, 5):
     train(model, device, train_loader, optimizer, epoch)
     test(model, device, test_loader)
 
-  torch.save(model, all_opts["mia_model_path"])
+  torch.save(model, mia_model_path)
 
 

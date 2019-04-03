@@ -8,12 +8,12 @@ class Mnist_model(nn.Module):
   """
   def __init__(self):
     super(Mnist_model, self).__init__()
-    self.conv1 = nn.Conv2d(1, 20, 5, 1)
-    self.conv2 = nn.Conv2d(20, 50, 5, 1)
-    self.conv2_batch_norm = nn.BatchNorm2d(50)
-    self.dense1 = nn.Linear(4*4*50, 500)
-    self.dense1_batch_norm = nn.BatchNorm1d(500)
-    self.dense2 = nn.Linear(500, 10)
+    self.conv1              = nn.Conv2d(1, 20, 5, 1)
+    self.conv2              = nn.Conv2d(20, 50, 5, 1)
+    self.conv2_batch_norm   = nn.BatchNorm2d(50)
+    self.dense1             = nn.Linear(4*4*50, 500)
+    self.dense1_batch_norm  = nn.BatchNorm1d(500)
+    self.dense2             = nn.Linear(500, 10)
 
   def forward(self, x):
     x = F.relu(self.conv1(x))
