@@ -1,11 +1,14 @@
-import os, sys, inspect
+import pathlib, sys
 
-project_dir = os.path.realpath(os.path.dirname(inspect.getfile(inspect.currentframe()))) + "/../"
-data_dir = project_dir + "/data/"
+home_path = pathlib.Path('.').resolve()
+while home_path.name != "membership_inference_attack":
+  home_path = home_path.parent
+  
+data_src_path = home_path/'src'/'data'
 
 # add ../data/ into the path
-if data_dir not in sys.path:
-  sys.path.insert(0, data_dir)
+if data_src_path.as_posix() not in sys.path:
+  sys.path.insert(0, data_src_path.as_posix())
 
 from dataset_generator import Dataset_generator
 from mnist_model import Mnist_model
@@ -105,7 +108,7 @@ def experiment(*opt_dict, **opt_args):
       raise ValueError("experiment() error: target_model_path is not set")
       
     # the model has not been trained so we do it here
-    if not os.path.isfile(all_opts["target_model_path"]):
+    if not pathlib.Path(all_opts["target_model_path"]).exists():
       dg = Dataset_generator(method = "academic", name = all_opts["academic_dataset"], train = True)
       train_set = dg.generate()
       train_loader = torch.utils.data.DataLoader(train_set, batch_size = 64, shuffle = True, **cuda_args)

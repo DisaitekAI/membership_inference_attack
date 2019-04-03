@@ -1,17 +1,20 @@
-import os, sys, inspect
+import pathlib, sys
 
-project_dir = os.path.realpath(os.path.dirname(inspect.getfile(inspect.currentframe()))) + "/../../"
-models_dir = project_dir + "/models/"
-src_models_dir = project_dir + "/src/models/"
-utils_dir = project_dir + "/src/utils/"
+home_path = pathlib.Path('.').resolve()
+while home_path.name != "membership_inference_attack":
+  home_path = home_path.parent
+  
+models_path = home_path/'models'
+src_models_path = home_path/'src'/'models'
+utils_path = home_path/'src'/'utils'
 
 # add ../models/ into the path
-if src_models_dir not in sys.path:
-  sys.path.insert(0, src_models_dir)
+if src_models_path.as_posix() not in sys.path:
+  sys.path.insert(0, src_models_path.as_posix())
   
 # add ../utils/ into the path
-if utils_dir not in sys.path:
-  sys.path.insert(0, utils_dir)
+if utils_path.as_posix() not in sys.path:
+  sys.path.insert(0, utils_path.as_posix())
   
 from experiment import experiment
 from utils_modules import Flatten
@@ -24,32 +27,29 @@ def test_experiment_mnist_basic():
   """
   Test a default MIA experiment on the MNIST dataset
   """
-  target_path = models_dir + "/test_mnist_model.pt"
-  mia_path = models_dir + "/test_mia_model.pt"
+  target_path = models_path/'test_mnist_model.pt'
+  mia_path = models_path/'test_mia_model.pt'
   
   experiment(academic_dataset = "mnist", 
-             target_model_path = target_path,
-             mia_model_path = mia_path)
+             target_model_path = target_path.as_posix(),
+             mia_model_path = mia_path.as_posix())
   
-  assert os.path.isfile(target_path)
-  assert os.path.isfile(mia_path)
-  
-  if os.path.isfile(target_path):
-    os.remove(target_path) 
-  if os.path.isfile(mia_path):
-    os.remove(mia_path) 
+  assert target_path.exists()
+  assert mia_path.exists()
+  target_path.remove_p()
+  mia_path.remove_p()
   
 def test_experiment_mnist_custom():
   """
   Test of a MIA on the MNIST dataset with custom model for the MNIST
   model, custom mode for the MIA model and custom optimizer options
   """
-  target_path = models_dir + "/test_mnist_model.pt"
-  mia_path = models_dir + "/test_mia_model.pt"
+  target_path = models_path/'test_mnist_model.pt'
+  mia_path = models_path/'test_mia_model.pt'
   
   experiment(academic_dataset = "mnist", 
-             target_model_path = target_path,
-             mia_model_path = mia_path,
+             target_model_path = target_path.as_posix(),
+             mia_model_path = mia_path.as_posix(),
              custom_target_model = OrderedDict([
                ('conv1', nn.Conv2d(1, 10, 3, 1)),
                ('relu1', nn.ReLU()),
@@ -72,13 +72,10 @@ def test_experiment_mnist_custom():
              ]),
              custom_mia_optim_args = {'lr' : 0.02, 'momentum' : 0.3})
   
-  assert os.path.isfile(target_path)
-  assert os.path.isfile(mia_path)
-  
-  if os.path.isfile(target_path):
-    os.remove(target_path) 
-  if os.path.isfile(mia_path):
-    os.remove(mia_path) 
+  assert target_path.exists()
+  assert mia_path.exists()
+  target_path.remove_p()
+  mia_path.remove_p()
   
 def main():
   test_experiment_mnist_basic()

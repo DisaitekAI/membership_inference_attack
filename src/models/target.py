@@ -1,6 +1,6 @@
 from mnist_model import Mnist_model
 
-import os
+import pathlib
 import torch
 
 class Target:
@@ -24,7 +24,7 @@ class Target:
       setattr(self, key, opt_args[key])
     
     if self.offline == True:
-      if os.path.isfile(self.model_path):
+      if pathlib.Path(self.model_path).exists():
         self.offline_model = torch.load(self.model_path)
         self.offline_model.eval()
         
