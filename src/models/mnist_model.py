@@ -3,6 +3,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class Mnist_model(nn.Module):
+  """
+  Basic CNN for the MNIST dataset
+  """
   def __init__(self):
     super(Mnist_model, self).__init__()
     self.conv1 = nn.Conv2d(1, 20, 5, 1)

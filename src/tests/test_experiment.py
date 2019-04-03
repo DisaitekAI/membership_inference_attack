@@ -21,6 +21,9 @@ import torch
 import torch.nn as nn
 
 def test_experiment_mnist_basic():
+  """
+  Test a default MIA experiment on the MNIST dataset
+  """
   target_path = models_dir + "/test_mnist_model.pt"
   mia_path = models_dir + "/test_mia_model.pt"
   
@@ -37,6 +40,10 @@ def test_experiment_mnist_basic():
     os.remove(mia_path) 
   
 def test_experiment_mnist_custom():
+  """
+  Test of a MIA on the MNIST dataset with custom model for the MNIST
+  model, custom mode for the MIA model and custom optimizer options
+  """
   target_path = models_dir + "/test_mnist_model.pt"
   mia_path = models_dir + "/test_mia_model.pt"
   
