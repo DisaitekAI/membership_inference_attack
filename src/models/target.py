@@ -8,7 +8,7 @@ class Target:
   Class to interact with the target ML whether it is an offline model 
   that is trained or an online model that is requested
   """
-  def __init__(self, offline = True, device = torch.device("cpu"), 
+  def __init__(self, offline = True, device = torch.device('cpu'), 
                model_path = None):
     """
     :offline boolean set True by default
@@ -24,7 +24,7 @@ class Target:
         self.offline_model.eval()
         
       else:
-        raise ValueError("Target: the model path is invalid")
+        raise ValueError('Target: the model path is invalid')
       
   def predict(vinput):
     if self.offline:

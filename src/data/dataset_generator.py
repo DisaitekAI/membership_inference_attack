@@ -20,7 +20,7 @@ class Dataset_generator:
       dg = Dataset_generator(method = "academic", name = "mnist", train = True)
       dataset = dg.generate() # use it as a torch.utils.data.Dataset
   """
-  def __init__(self, method = "academic", train = True, name = None):
+  def __init__(self, method = 'academic', train = True, name = None):
     """
     :method "academic"
     :name "mnist". The name of an academic dataset
@@ -40,8 +40,8 @@ class Dataset_generator:
     
     Always return a torch.utils.data.Dataset object
     """
-    if self.method == "academic":
-      if self.name == "mnist":
+    if self.method == 'academic':
+      if self.name == 'mnist':
         return datasets.MNIST(data_path.as_posix(), train=self.train, download=True,
                               transform=transforms.Compose([
                                transforms.ToTensor(),

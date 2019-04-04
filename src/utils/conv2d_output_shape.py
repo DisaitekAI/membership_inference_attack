@@ -38,5 +38,5 @@ def main():
   
   print("{}x{}".format(new_h, new_w))
   
-if __name__ == "__main__":
+if __name__ == '__main__':
   main()

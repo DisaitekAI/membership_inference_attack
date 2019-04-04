@@ -1,7 +1,7 @@
 import pathlib, sys
 
 home_path = pathlib.Path('.').resolve()
-while home_path.name != "membership_inference_attack":
+while home_path.name != 'membership_inference_attack':
   home_path = home_path.parent
   
 data_path = home_path/'data'
@@ -15,12 +15,12 @@ from dataset_generator import Dataset_generator
 import torch
 
 def test_dataset_generator_mnist():
-  dg = Dataset_generator(method = "academic", name = "mnist", train = True)
+  dg = Dataset_generator(method = 'academic', name = 'mnist', train = True)
   dataset = dg.generate()
   assert isinstance(dataset, torch.utils.data.Dataset)
   assert (data_path/'MNIST'/'processed'/'training.pt').exists()
   
-  dg = Dataset_generator(method = "academic", name = "mnist", train = False)
+  dg = Dataset_generator(method = 'academic', name = 'mnist', train = False)
   dataset = dg.generate()
   assert isinstance(dataset, torch.utils.data.Dataset)
   assert (data_path/'MNIST'/'processed'/'test.pt').exists()
@@ -28,5 +28,5 @@ def test_dataset_generator_mnist():
 def main():
   test_dataset_generator_mnist()
 
-if __name__ == "__main__":
+if __name__ == '__main__':
   main()

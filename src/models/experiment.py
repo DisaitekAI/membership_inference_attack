@@ -1,11 +1,17 @@
 import pathlib, sys
+import pdb
 
 home_path = pathlib.Path('.').resolve()
-while home_path.name != "membership_inference_attack":
+while home_path.name != 'membership_inference_attack':
   home_path = home_path.parent
   
 data_src_path = home_path/'src'/'data'
-
+utils_path = home_path/'src'/'utils'
+  
+# add ../utils/ into the path
+if utils_path.as_posix() not in sys.path:
+  sys.path.insert(0, utils_path.as_posix())
+  
 # add ../data/ into the path
 if data_src_path.as_posix() not in sys.path:
   sys.path.insert(0, data_src_path.as_posix())
@@ -13,45 +19,14 @@ if data_src_path.as_posix() not in sys.path:
 from dataset_generator import Dataset_generator
 from mnist_model import Mnist_model
 from target import Target
-# ~ from shadow_swarm_trainer import Shadow_swarm_trainer
+from shadow_swarm_trainer import get_mia_dataset
 from mia_model import MIA_model
+from utils_modules import train, test
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-
-def train(model, device, train_loader, optimizer, epoch):
-  model.train()
-  for batch_idx, (data, target) in enumerate(train_loader):
-    data, target = data.to(device), target.to(device)
-    optimizer.zero_grad()
-    output = model(data)
-    loss = F.nll_loss(output, target)
-    loss.backward()
-    optimizer.step()
-    if batch_idx % 10 == 0:
-      print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-        epoch, batch_idx * len(data), len(train_loader.dataset),
-        100. * batch_idx / len(train_loader), loss.item()))
-        
-def test(model, device, test_loader):
-  model.eval()
-  test_loss = 0
-  correct = 0
-  with torch.no_grad():
-    for data, target in test_loader:
-      data, target = data.to(device), target.to(device)
-      output = model(data)
-      test_loss += F.nll_loss(output, target, reduction='sum').item() # sum up batch loss
-      pred = output.argmax(dim = 1, keepdim = True) # get the index of the max log-probability
-      correct += pred.eq(target.view_as(pred)).sum().item()
-
-  test_loss /= len(test_loader.dataset)
-
-  print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
-        test_loss, correct, len(test_loader.dataset),
-        100. * correct / len(test_loader.dataset)))
 
 def experiment(academic_dataset         = None, 
                custom_target_model      = None,
@@ -60,7 +35,12 @@ def experiment(academic_dataset         = None,
                custom_mia_optim_args    = None,
                use_cuda                 = False,
                mia_model_path           = None,
-               target_model_path        = None):
+               target_model_path        = None,
+               shadow_number            = 100,
+               custom_shadow_model      = None,
+               custom_shadow_optim_args = None,
+               shadow_model_base_path   = None,
+               mia_dataset_path         = None):
   """
   
   start a membership inference attack experiment
@@ -84,36 +64,50 @@ def experiment(academic_dataset         = None,
   :mia_model_path required
   
   :use_cuda False by default
-    
-  """
-  if mia_model_path is None: 
-    raise ValueError("experiment() error: mia_model_path is not set")
   
-  device = torch.device("cuda" if use_cuda else "cpu")
+  :shadow_number 100 by default
+  
+  :shadow_model_base_path base file path for saving the shadow models. 
+    File names will be incremented with the shadow index. Required.
+  
+  :custom_shadow_model an OrderedDict description of the 
+    shadow model. None by default. If the target is online, providing 
+    the model is required. If the target is offline by default the 
+    shadow model is a copy of the target model.
+  
+  :custom_shadow_optim_args dict of custom values for lr and 
+    momentum. None by default.
+    
+  :mia_dataset_path path for saving or loading the mia dataset. 
+    Required.
+  """
+  if (mia_model_path is None) or (mia_dataset_path is None): 
+    raise ValueError('experiment(): mia_model_path or mia_dataset_path is not set')
+  
+  device = torch.device('cuda' if use_cuda else 'cpu')
   cuda_args = { 'num_workers' : 1, 'pin_memory' : True } if use_cuda else {}
   
-  target = None
   shadow_swarm_dataset = None
   
   # train / load target model if offline
   if academic_dataset is not None:
     if target_model_path is None:
-      raise ValueError("experiment() error: target_model_path is not set")
+      raise ValueError('experiment(): target_model_path is not set')
       
     # the model has not been trained so we do it here
     if not pathlib.Path(target_model_path).exists():
-      dg = Dataset_generator(method = "academic", name = academic_dataset, train = True)
+      dg = Dataset_generator(method = 'academic', name = academic_dataset, train = True)
       train_set = dg.generate()
       train_loader = torch.utils.data.DataLoader(train_set, batch_size = 64, shuffle = True, **cuda_args)
       
-      dg = Dataset_generator(method = "academic", name = academic_dataset, train = False)
+      dg = Dataset_generator(method = 'academic', name = academic_dataset, train = False)
       test_set = dg.generate()
       shadow_swarm_dataset = test_set
       test_loader = torch.utils.data.DataLoader(test_set, batch_size = 1000, shuffle = True, **cuda_args)
       
       model = None
       if custom_target_model is None:
-        if academic_dataset == "mnist":
+        if academic_dataset == 'mnist':
           model = Mnist_model().to(device)
       else:
         model = nn.Sequential(custom_target_model).to(device)
@@ -124,44 +118,53 @@ def experiment(academic_dataset         = None,
         
       optimizer = optim.SGD(model.parameters(), **optim_args)
       
-      print("training the target model")
+      print('training the target model')
       for epoch in range(1, 5):
         train(model, device, train_loader, optimizer, epoch)
         test(model, device, test_loader)
 
       torch.save(model, target_model_path)
       
-    target = Target(model_path = target_model_path)
     if shadow_swarm_dataset is None:
-      dg = Dataset_generator(method = "academic", name = academic_dataset, train = False)
+      dg = Dataset_generator(method = 'academic', name = academic_dataset, train = False)
       shadow_swarm_dataset = dg.generate()
+  
+  shadow_model = None
+  if custom_shadow_model is None:
+    shadow_model = torch.load(target_model_path).to(device)
+  else:
+    shadow_model = nn.Sequential(custom_shadow_model).to(device)
     
-  sst = Shadow_swarm_trainer(shadow_swarm_dataset)
-  mia_dataset = sst.get_mia_dataset()
+  mia_dataset = get_mia_dataset(shadow_swarm_dataset, shadow_number, 
+                                shadow_model, use_cuda, 
+                                custom_shadow_optim_args,
+                                shadow_model_base_path,
+                                mia_dataset_path)
   
   train_size = int(0.8 * len(mia_dataset))
-  test_size = len(mia_dataset) - train_size
+  test_size  = len(mia_dataset) - train_size
   train_set, test_set = torch.utils.data.random_split(mia_dataset, [train_size, test_size])
-  
+
   mia_model = None
   if custom_mia_model is None:
-    _, first_output = train_set[0]
-    mia_model = MIA_model(input_size = len(first_output))
+    first_input_activations, _, _ = train_set[0]
+    mia_model = MIA_model(input_size = len(first_input_activations))
   else:
     mia_model = nn.Sequential(custom_mia_model).to(device)
   
   train_loader = torch.utils.data.DataLoader(train_set, batch_size = 64, shuffle = True, **cuda_args)
-  test_loader = torch.utils.data.DataLoader(test_set, batch_size = 1000, shuffle = True, **cuda_args)
+  test_loader  = torch.utils.data.DataLoader(test_set, batch_size = 1000, shuffle = True, **cuda_args)
   
   optim_args = { 'lr' : 0.01, 'momentum' : 0.5 }
   if custom_mia_optim_args is not None:
     optim_args = custom_mia_optim_args
-  
-  print("training the MIA model")
-  for epoch in range(1, 5):
-    train(model, device, train_loader, optimizer, epoch)
-    test(model, device, test_loader)
+  optimizer = optim.SGD(mia_model.parameters(), **optim_args)
 
-  torch.save(model, mia_model_path)
+  print('training the MIA model')
+  for epoch in range(1, 5):
+    train(mia_model, device, train_loader, optimizer, epoch)
+    test(mia_model, device, test_loader)
+
+  torch.save(mia_model, mia_model_path)
 
 
