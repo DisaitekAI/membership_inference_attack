@@ -25,4 +25,13 @@ class swarm_shadow_model:
       index += 1
     return shadow_models
   def generate_attack_data(self, batch_size, epoch_number):
-    
+    features, labels = self.data
+    shadow_datasets = split(self)
+    shadow_models = training(self, batch_size, epoch_number)
+    attack_data = Dataset_generator(method = "academic", name = academic_dataset, train = False)
+    for i in range(self.swarm_number):
+      output = shadow_models[i](features)
+      is_known = [k // (len(self.data) // self.swarm_number) == i for k in range(len(self.data))]
+      current_shadow_attack_data = output + labels + is_known # ne convient pas, il faut concaténer selon l'axe des features...
+      attack_data += current_shadow_attack_data
+    return attack_data
