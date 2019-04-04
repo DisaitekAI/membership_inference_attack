@@ -1,5 +1,4 @@
 import pathlib, sys
-import pdb
 
 home_path = pathlib.Path('.').resolve()
 while home_path.name != 'membership_inference_attack':
@@ -27,6 +26,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+from torch.utils.data.sampler import WeightedRandomSampler
 
 def experiment(academic_dataset         = None, 
                custom_target_model      = None,
@@ -152,18 +152,30 @@ def experiment(academic_dataset         = None,
   else:
     mia_model = nn.Sequential(custom_mia_model).to(device)
   
-  train_loader = torch.utils.data.DataLoader(train_set, batch_size = 64, shuffle = True, **cuda_args)
-  test_loader  = torch.utils.data.DataLoader(test_set, batch_size = 1000, shuffle = True, **cuda_args)
+  print('training the MIA model')
+  # correction for class imbalance
+  weights = torch.tensor([2/shadow_number, 2 * (shadow_number-1)/shadow_number])
+  
+  train_sampler = WeightedRandomSampler(weights, num_samples = len(train_set), 
+                                        replacement = True)
+  train_loader = torch.utils.data.DataLoader(train_set, batch_size = 2 * shadow_number, 
+                                             shuffle = False, **cuda_args, 
+                                             sampler = train_sampler)
+                                             
+  train_sampler = WeightedRandomSampler(weights, num_samples = len(test_set), 
+                                        replacement = True)                                          
+  test_loader  = torch.utils.data.DataLoader(test_set, batch_size = 1000, 
+                                             shuffle = False, **cuda_args,
+                                             sampler = train_sampler)
   
   optim_args = { 'lr' : 0.01, 'momentum' : 0.5 }
   if custom_mia_optim_args is not None:
     optim_args = custom_mia_optim_args
   optimizer = optim.SGD(mia_model.parameters(), **optim_args)
-
-  print('training the MIA model')
+  
   for epoch in range(1, 5):
-    train(mia_model, device, train_loader, optimizer, epoch)
-    test(mia_model, device, test_loader)
+    train(mia_model, device, train_loader, optimizer, epoch, class_weights = weights)
+    test(mia_model, device, test_loader, class_weights = weights)
 
   torch.save(mia_model, mia_model_path)
 
