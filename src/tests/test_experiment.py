@@ -39,9 +39,9 @@ def remove_experiment_files():
   base_dir = shadow_base_path.parent
   base_file_name = base_file.name
   
-  old_shadow_models = base_dir.glob(base_file_name + '_*.pt')
+  old_shadow_models = list(base_dir.glob(base_file_name + '_*.pt'))
   for i in range(len(old_shadow_models)):
-    old_shadow_models.unlink()
+    old_shadow_models[i].unlink()
 
 def test_experiment_mnist_basic():
   """

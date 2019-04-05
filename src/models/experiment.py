@@ -21,6 +21,7 @@ from target import Target
 from shadow_swarm_trainer import get_mia_dataset
 from mia_model import MIA_model
 from utils_modules import train, test
+from statistics import Statistics
 
 import torch
 import torch.nn as nn
@@ -40,7 +41,8 @@ def experiment(academic_dataset         = None,
                custom_shadow_model      = None,
                custom_shadow_optim_args = None,
                shadow_model_base_path   = None,
-               mia_dataset_path         = None):
+               mia_dataset_path         = None,
+               stats                    = None):
   """
   
   start a membership inference attack experiment
@@ -80,6 +82,8 @@ def experiment(academic_dataset         = None,
     
   :mia_dataset_path path for saving or loading the mia dataset. 
     Required.
+    
+  :stats pass a Statistics object to record stats for this experiment
   """
   if (mia_model_path is None) or (mia_dataset_path is None): 
     raise ValueError('experiment(): mia_model_path or mia_dataset_path is not set')
@@ -156,17 +160,22 @@ def experiment(academic_dataset         = None,
   # correction for class imbalance
   weights = torch.tensor([2/shadow_number, 2 * (shadow_number-1)/shadow_number])
   
-  train_sampler = WeightedRandomSampler(weights, num_samples = len(train_set), 
-                                        replacement = True)
-  train_loader = torch.utils.data.DataLoader(train_set, batch_size = 2 * shadow_number, 
-                                             shuffle = False, **cuda_args, 
-                                             sampler = train_sampler)
+  # ~ train_sampler = WeightedRandomSampler(weights, num_samples = len(train_set), 
+                                        # ~ replacement = True)
+  # ~ train_loader = torch.utils.data.DataLoader(train_set, batch_size = 2 * shadow_number, 
+                                             # ~ shuffle = False, **cuda_args, 
+                                             # ~ sampler = train_sampler)
                                              
-  train_sampler = WeightedRandomSampler(weights, num_samples = len(test_set), 
-                                        replacement = True)                                          
+  # ~ train_sampler = WeightedRandomSampler(weights, num_samples = len(test_set), 
+                                        # ~ replacement = True)                                          
+  # ~ test_loader  = torch.utils.data.DataLoader(test_set, batch_size = 1000, 
+                                             # ~ shuffle = False, **cuda_args,
+                                             # ~ sampler = train_sampler)
+                                             
+  train_loader = torch.utils.data.DataLoader(train_set, batch_size = 2 * shadow_number, 
+                                             shuffle = False, **cuda_args)                                           
   test_loader  = torch.utils.data.DataLoader(test_set, batch_size = 1000, 
-                                             shuffle = False, **cuda_args,
-                                             sampler = train_sampler)
+                                             shuffle = True, **cuda_args)
   
   optim_args = { 'lr' : 0.01, 'momentum' : 0.5 }
   if custom_mia_optim_args is not None:
@@ -174,8 +183,11 @@ def experiment(academic_dataset         = None,
   optimizer = optim.SGD(mia_model.parameters(), **optim_args)
   
   for epoch in range(1, 5):
-    train(mia_model, device, train_loader, optimizer, epoch, class_weights = weights)
-    test(mia_model, device, test_loader, class_weights = weights)
+    train(mia_model, device, train_loader, optimizer, epoch, 
+          class_weights = weights)
+    test(mia_model, device, test_loader, 
+         class_weights = weights, test_stats = stats)
+    stats.print_results()
 
   torch.save(mia_model, mia_model_path)
 

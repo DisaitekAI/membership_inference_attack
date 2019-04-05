@@ -20,14 +20,18 @@ if utils_path.as_posix() not in sys.path:
 from experiment import experiment
 from utils_modules import Flatten
 from collections import OrderedDict
+from statistics import Statistics
 import torch.nn as nn
   
 def main():
-  # ~ experiment(academic_dataset       = 'mnist', 
-             # ~ target_model_path      = (models_path/'mnist_model.pt').as_posix(),
-             # ~ mia_model_path         = (models_path/'mia_model.pt').as_posix(),
-             # ~ shadow_model_base_path = (models_path/'shadows'/'shadow').as_posix(),
-             # ~ mia_dataset_path       = (data_path/'mia_dataset.pt').as_posix())
+  experiment_stats = Statistics()
+  
+  experiment(academic_dataset       = 'mnist', 
+             target_model_path      = (models_path/'mnist_model.pt').as_posix(),
+             mia_model_path         = (models_path/'mia_model.pt').as_posix(),
+             shadow_model_base_path = (models_path/'shadows'/'shadow').as_posix(),
+             mia_dataset_path       = (data_path/'mia_dataset.pt').as_posix(),
+             stats                  = experiment_stats)
   
   experiment(academic_dataset    = 'mnist', 
              target_model_path   = (models_path/'mnist_model.pt').as_posix(),
@@ -47,7 +51,8 @@ def main():
              ]),
              shadow_number            = 50,
              shadow_model_base_path   = (models_path/'shadows'/'shadow').as_posix(),
-             mia_dataset_path         = (data_path/'mia_dataset.pt').as_posix())
+             mia_dataset_path         = (data_path/'mia_dataset.pt').as_posix(),
+             stats = experiment_stats)
 
 if __name__ == '__main__':
   main()
