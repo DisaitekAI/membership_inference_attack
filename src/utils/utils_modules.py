@@ -125,13 +125,13 @@ def test(model, device, test_loader, verbose = True, class_weights = None, test_
       target = batch[-1]
       input_list = [e.to(device) for e in input_list]
       target = target.to(device)
-      
+
       output = model(*input_list)
       test_loss += F.nll_loss(output, target, reduction='sum', weight = class_weights).item() # sum up batch loss
       pred = output.argmax(dim = 1, keepdim = True) # get the index of the max log-probability
       
       correct += pred.eq(target.view_as(pred)).sum().item()
-      
+
       if test_stats is not None:
         test_stats.add_batch_results(pred.view_as(target).tolist(), target.tolist())
             
