@@ -18,7 +18,7 @@ if data_src_path.as_posix() not in sys.path:
 from dataset_generator import Dataset_generator
 from mnist_model import Mnist_model
 from target import Target
-from shadow_swarm_trainer import get_mia_dataset
+from shadow_swarm_trainer import get_mia_train_dataset, get_mia_test_dataset
 from mia_model import MIA_model
 from utils_modules import train, test
 from statistics import Statistics
@@ -41,7 +41,8 @@ def experiment(academic_dataset         = None,
                custom_shadow_model      = None,
                custom_shadow_optim_args = None,
                shadow_model_base_path   = None,
-               mia_dataset_path         = None,
+               mia_train_dataset_path   = None,
+               mia_test_dataset_path    = None,
                stats                    = None):
   """
   
@@ -80,12 +81,18 @@ def experiment(academic_dataset         = None,
   :custom_shadow_optim_args dict of custom values for lr and 
     momentum. None by default.
     
-  :mia_dataset_path path for saving or loading the mia dataset. 
-    Required.
+  :mia_train_dataset_path path for saving or loading the mia dataset 
+    used for training. Required.
+    
+  :mia_test_dataset_path path for saving or loading the mia dataset 
+    used for testing. Required.
     
   :stats pass a Statistics object to record stats for this experiment
   """
-  if (mia_model_path is None) or (mia_dataset_path is None): 
+  
+  if (mia_model_path         is None) or \
+     (mia_train_dataset_path is None) or \
+     (mia_test_dataset_path  is None): 
     raise ValueError('experiment(): mia_model_path or mia_dataset_path is not set')
   
   device = torch.device('cuda' if use_cuda else 'cpu')
@@ -139,19 +146,35 @@ def experiment(academic_dataset         = None,
   else:
     shadow_model = nn.Sequential(custom_shadow_model).to(device)
     
-  mia_dataset = get_mia_dataset(shadow_swarm_dataset, shadow_number, 
-                                shadow_model, use_cuda, 
-                                custom_shadow_optim_args,
-                                shadow_model_base_path,
-                                mia_dataset_path)
+  mia_train_dataset = get_mia_train_dataset(shadow_swarm_dataset, shadow_number, 
+                                            shadow_model, use_cuda, 
+                                            custom_shadow_optim_args,
+                                            shadow_model_base_path,
+                                            mia_train_dataset_path)
   
-  train_size = int(0.8 * len(mia_dataset))
-  test_size  = len(mia_dataset) - train_size
-  train_set, test_set = torch.utils.data.random_split(mia_dataset, [train_size, test_size])
-
+  # TODO(PI) only for mnist right now
+  dg = Dataset_generator(method = 'academic', name = academic_dataset, train = True)
+  train_set = dg.generate()
+  dg = Dataset_generator(method = 'academic', name = academic_dataset, train = False)
+  test_set = dg.generate()
+  
+  target_model = None
+  if custom_target_model is None:
+    target_model = torch.load(target_model_path).to(device)
+  else:
+    target_model = nn.Sequential(custom_target_model).to(device)
+    
+  mia_test_dataset = get_mia_test_dataset(train_set,
+                                          test_set,
+                                          target_model,
+                                          use_cuda,
+                                          mia_test_dataset_path)  
+  # ~ train_size = int(0.8 * len(mia_dataset))
+  # ~ test_size  = len(mia_dataset) - train_size
+  # ~ train_set, test_set = torch.utils.data.random_split(mia_dataset, [train_size, test_size])
   mia_model = None
   if custom_mia_model is None:
-    first_input_activations, _, _ = train_set[0]
+    first_input_activations, _, _ = mia_train_dataset[0]
     mia_model = MIA_model(input_size = len(first_input_activations))
   else:
     mia_model = nn.Sequential(custom_mia_model).to(device)
@@ -172,9 +195,9 @@ def experiment(academic_dataset         = None,
                                              # ~ shuffle = False, **cuda_args,
                                              # ~ sampler = train_sampler)
                                              
-  train_loader = torch.utils.data.DataLoader(train_set, batch_size = 2 * shadow_number, 
+  train_loader = torch.utils.data.DataLoader(mia_train_dataset, batch_size = 2 * shadow_number, 
                                              shuffle = False, **cuda_args)                                           
-  test_loader  = torch.utils.data.DataLoader(test_set, batch_size = 1000, 
+  test_loader  = torch.utils.data.DataLoader(mia_test_dataset, batch_size = 1000, 
                                              shuffle = True, **cuda_args)
   
   optim_args = { 'lr' : 0.01, 'momentum' : 0.5 }

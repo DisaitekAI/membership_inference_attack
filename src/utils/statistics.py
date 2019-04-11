@@ -6,10 +6,10 @@ class Statistics:
     self.y_true = []
     
   def new_experiment(self, name, parameters):
-    return
+    pass
     
   def new_test_epoch():
-    return
+    pass
     
   def add_batch_results(self, batch_pred, batch_true):
     self.y_pred += batch_pred
@@ -21,14 +21,14 @@ class Statistics:
     self.y_true = []
     
   def save(self, file_path):
-    return
+    pass
     
   def print_results(self):
     self.finalize()
-    print("balanced accuracy score: {}".format(self.balanced_accuracy))
+    print(f"balanced accuracy score: {self.balanced_accuracy}")
     
   def plot(self):
-    return
+    pass
     
 # ~ https://scikit-learn.org/stable/modules/generated/sklearn.metrics.confusion_matrix.html
 # ~ https://scikit-learn.org/stable/modules/generated/sklearn.metrics.accuracy_score.html
@@ -41,3 +41,5 @@ class Statistics:
     # ~ plusieurs fonction de test (une par epoch d'entrainement)
       # ~ pour chaque test tu as plusieurs résultats de batch
         # ~ toi tu reçois les résultats d'un batch 
+
+# remplacer les "" par des f""

@@ -26,7 +26,7 @@ class Target:
       else:
         raise ValueError('Target: the model path is invalid')
       
-  def predict(vinput):
+  def __call__(self, vinput):
     if self.offline:
       return self.offline_model(vinput).to(self.device)
       

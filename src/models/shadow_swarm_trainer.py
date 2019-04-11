@@ -14,29 +14,16 @@ import torch.utils.data
 import torch.optim as optim
 from copy import deepcopy
 from utils_modules import weight_init, train
-from miscellaneous import progress_bar
+from miscellaneous import progress_bar, max_label
 from torch.utils.data import TensorDataset
 
-def max_label(data_loader):
-  """
-  Super dirty function to get the maximum label from any dataset.
-  Use it when there is no other choice.
-  """
-  m = 0
-  for _, targets in data_loader:
-    for target in targets:
-      if target > m:
-        m = target
-        
-  return m.item()
-
-def get_mia_dataset(dataset                  = None, 
-                    shadow_number            = None, 
-                    shadow_model             = None, 
-                    use_cuda                 = False,
-                    custom_shadow_optim_args = None,
-                    shadow_model_base_path   = None,
-                    mia_dataset_path         = None):
+def get_mia_train_dataset(dataset                  = None, 
+                          shadow_number            = None, 
+                          shadow_model             = None, 
+                          use_cuda                 = False,
+                          custom_shadow_optim_args = None,
+                          shadow_model_base_path   = None,
+                          mia_dataset_path         = None):
   """
   create a dataset for the MIA model.
   
@@ -142,7 +129,6 @@ def get_mia_dataset(dataset                  = None,
     shadow_models[i].eval()
     
   # build the MIA dataset
-  mia_dataset                   = []
   input_activation_tensor_list  = list()
   input_targetclass_tensor_list = list()
   output_tensor_list            = list()
@@ -183,7 +169,63 @@ def get_mia_dataset(dataset                  = None,
   
   return mia_dataset
       
-    
-    
-    
+def get_mia_test_dataset(train_dataset    = None,
+                         test_dataset     = None,
+                         target_model     = None,
+                         use_cuda         = False,
+                         mia_dataset_path = None):
+  if pathlib.Path(mia_dataset_path).exists():
+    print('loading the last MIA test dataset')
+    return torch.load(mia_dataset_path)
   
+  print('building the MIA test dataset')
+                           
+  cuda_args = { 'num_workers' : 1, 'pin_memory' : True } if use_cuda else {}
+  device = torch.device('cuda' if use_cuda else 'cpu')  
+  
+  input_activation_tensor_list  = list()
+  input_targetclass_tensor_list = list()
+  output_tensor_list            = list()
+  
+  i = 0
+  train_loader = torch.utils.data.DataLoader(train_dataset, batch_size = 1, shuffle = False, **cuda_args)
+  test_loader  = torch.utils.data.DataLoader(test_dataset, batch_size = 1, shuffle = False, **cuda_args)
+  class_number = max_label(test_loader) + 1 # assuming the target solves a classification task 
+  dataset_size = len(train_dataset) + len(test_dataset)
+  
+  with torch.no_grad():
+    for data, targets in train_loader:
+      i += 1
+      data, targets = data.to(device), targets.to(device)
+      
+      one_hot_target = torch.zeros([1, class_number], dtype = torch.float)
+      one_hot_target[0][targets[0]] = 1.0 # assuming the target solves a classification task 
+
+      output = target_model(data)
+      input_activation_tensor_list.append(output)
+      input_targetclass_tensor_list.append(one_hot_target)
+      output_tensor_list.append(torch.tensor([1]))
+        
+      progress_bar(iteration = i, total = dataset_size)
+      
+  with torch.no_grad():
+    for data, targets in test_loader:
+      i += 1
+      data, targets = data.to(device), targets.to(device)
+      
+      one_hot_target = torch.zeros([1, class_number], dtype = torch.float)
+      one_hot_target[0][targets[0]] = 1.0 # assuming the target solves a classification task 
+
+      output = target_model(data)
+      input_activation_tensor_list.append(output)
+      input_targetclass_tensor_list.append(one_hot_target)
+      output_tensor_list.append(torch.tensor([0]))
+        
+      progress_bar(iteration = i, total = dataset_size)
+
+  mia_dataset = TensorDataset(torch.cat(input_activation_tensor_list),
+                              torch.cat(input_targetclass_tensor_list),
+                              torch.cat(output_tensor_list))
+  torch.save(mia_dataset, mia_dataset_path)
+  
+  return mia_dataset

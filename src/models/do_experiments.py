@@ -31,7 +31,8 @@ def main():
              target_model_path      = (models_path/'mnist_model.pt').as_posix(),
              mia_model_path         = (models_path/'mia_model_default.pt').as_posix(),
              shadow_model_base_path = (models_path/'shadows'/'shadow_default').as_posix(),
-             mia_dataset_path       = (data_path/'mia_dataset_default.pt').as_posix(),
+             mia_train_dataset_path = (data_path/'mia_train_dataset_default.pt').as_posix(),
+             mia_test_dataset_path  = (data_path/'mia_test_dataset_default.pt').as_posix(),
              stats                  = experiment_stats)
   
   # without regularization
@@ -53,7 +54,8 @@ def main():
              ]),
              shadow_number            = 50,
              shadow_model_base_path   = (models_path/'shadows'/'shadow_exp1').as_posix(),
-             mia_dataset_path         = (data_path/'mia_dataset_exp1.pt').as_posix(),
+             mia_train_dataset_path   = (data_path/'mia_train_dataset_exp1.pt').as_posix(),
+             mia_test_dataset_path    = (data_path/'mia_test_dataset_exp1.pt').as_posix(),
              stats                    = experiment_stats)
   
   # with dropout regularization
@@ -64,21 +66,22 @@ def main():
                ('conv1'       , nn.Conv2d(1, 10, 3, 1)),
                ('relu1'       , nn.ReLU()),
                ('maxpool1'    , nn.MaxPool2d(2, 2)),
-               ('dropout1'    , nn.Dropout2d(p = 0.1)),
+               ('dropout1'    , nn.Dropout(p = 0.5)),
                ('conv2'       , nn.Conv2d(10, 10, 3, 1)),
                ('relu2'       , nn.ReLU()),
                ('maxpool2'    , nn.MaxPool2d(2, 2)),
-               ('dropout2'    , nn.Dropout2d(p = 0.1)),
+               ('dropout2'    , nn.Dropout(p = 0.5)),
                ('to1d'        , Flatten()),
                ('dense1'      , nn.Linear(11*11*10, 500)),
                ('tanh'        , nn.Tanh()),
-               ('dropout3'    , nn.Dropout(p = 0.1)),
+               ('dropout3'    , nn.Dropout(p = 0.5)),
                ('dense2'      , nn.Linear(500, 10)),
                ('logsoftmax'  , nn.LogSoftmax(dim=1))
              ]),
              shadow_number            = 50,
              shadow_model_base_path   = (models_path/'shadows'/'shadow_exp2').as_posix(),
-             mia_dataset_path         = (data_path/'mia_dataset_exp2.pt').as_posix(),
+             mia_train_dataset_path   = (data_path/'mia_train_dataset_exp2.pt').as_posix(),
+             mia_test_dataset_path    = (data_path/'mia_test_dataset_exp2.pt').as_posix(),
              stats                    = experiment_stats)
              
   # ~ experiment_stats.print_results()
