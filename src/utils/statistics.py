@@ -32,7 +32,7 @@ class Statistics:
     self.epoch_count[self.current_experiment_name] += 1
         
   def add_batch_results(self, batch_pred, batch_true):
-    if (self.epoch_count[self.current_experiment_name] == 1):
+    if self.epoch_count[self.current_experiment_name] == 1:
         self.batch_count[self.current_experiment_name] += 1
     self.y_pred.extend(batch_pred)
     self.y_true.extend(batch_true)
