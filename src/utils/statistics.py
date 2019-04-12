@@ -36,7 +36,8 @@ class Statistics:
         self.batch_count[self.current_experiment_name] += 1
     self.y_pred += batch_pred
     self.y_true += batch_true
-    self.balanced_accuracy[self.current_experiment_name].append(balanced_accuracy_score(self.y_pred, self.y_true))
+    new_accuracy = balanced_accuracy_score(self.y_pred, self.y_true)
+    self.balanced_accuracy[self.current_experiment_name].append(new_accuracy)
     self.roc_area[self.current_experiment_name].append(roc_auc_score(self.y_pred, self.y_true))
     
   def end_epoch(self):
