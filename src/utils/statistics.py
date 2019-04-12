@@ -1,4 +1,5 @@
-from sklearn.metrics import confusion_matrix, classification_report, balanced_accuracy_score, roc_auc_score, classification_report, roc_curve
+from sklearn.metrics import confusion_matrix, classification_report, balanced_accuracy_score, \
+roc_auc_score, classification_report, roc_curve
 import matplotlib.pyplot as plt
 from matplotlib import ticker
 import numpy as np
