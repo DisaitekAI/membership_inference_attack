@@ -124,7 +124,7 @@ def get_mia_train_dataset(dataset                  = None,
       progress_bar(iteration = i, total = shadow_number - 1)
   
   # set all shadow models in evaluation mode
-  print("\nbuilding the MIA dataset")
+  print("\nbuilding the MIA train dataset")
   for i in range(shadow_number):
     shadow_models[i].eval()
     

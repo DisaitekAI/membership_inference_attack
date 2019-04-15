@@ -196,7 +196,7 @@ def experiment(academic_dataset         = None,
                                              # ~ sampler = train_sampler)
                                              
   train_loader = torch.utils.data.DataLoader(mia_train_dataset, batch_size = 2 * shadow_number, 
-                                             shuffle = False, **cuda_args)                                           
+                                             shuffle = True, **cuda_args)                                           
   test_loader  = torch.utils.data.DataLoader(mia_test_dataset, batch_size = 1000, 
                                              shuffle = True, **cuda_args)
   
