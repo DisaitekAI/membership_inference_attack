@@ -51,6 +51,8 @@ class Statistics:
     
   def print_results(self): # à appeler à chaque fin d'epoch
     print(f"Balanced accuracy score: {balanced_accuracy_score(self.y_pred, self.y_true)}")
+    self.y_pred = []
+    self.y_true = []
     # ~ self.end_epoch()
     # ~ print("Balanced accuracy score: {}".format(self.balanced_accuracy[self.current_experiment_name][-1]))
     # ~ print("Confusion matrix:\n {}".format(self.confusion_matrix))
