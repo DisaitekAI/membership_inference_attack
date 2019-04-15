@@ -200,7 +200,7 @@ def get_mia_test_dataset(train_dataset    = None,
       
       one_hot_target = torch.zeros([1, class_number], dtype = torch.float)
       one_hot_target[0][targets[0]] = 1.0 # assuming the target solves a classification task 
-
+      
       output = target_model(data)
       input_activation_tensor_list.append(output)
       input_targetclass_tensor_list.append(one_hot_target)

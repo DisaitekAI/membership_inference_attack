@@ -31,12 +31,13 @@ class Statistics:
     self.epoch_count[self.current_experiment_name] += 1
         
   def add_batch_results(self, batch_pred, batch_true):
-    if (self.epoch_count[self.current_experiment_name] == 1):
-        self.batch_count[self.current_experiment_name] += 1
+    # ~ if (self.epoch_count[self.current_experiment_name] == 1):
+        # ~ self.batch_count[self.current_experiment_name] += 1
     self.y_pred += batch_pred
     self.y_true += batch_true
-    self.balanced_accuracy[self.current_experiment_name].append(balanced_accuracy_score(self.y_pred, self.y_true))
-    self.roc_area[self.current_experiment_name].append(roc_auc_score(self.y_pred, self.y_true))
+    # ~ self.balanced_accuracy[self.current_experiment_name].append(balanced_accuracy_score(self.y_pred, self.y_true))
+    # ~ self.roc_area[self.current_experiment_name].append(roc_auc_score(self.y_pred, self.y_true))
+    pass
     
   def end_epoch(self):
     self.confusion_matrix = confusion_matrix(self.y_pred, self.y_true)
@@ -49,11 +50,13 @@ class Statistics:
     pass
     
   def print_results(self): # à appeler à chaque fin d'epoch
-    self.end_epoch()
-    print("Balanced accuracy score: {}".format(self.balanced_accuracy[self.current_experiment_name][-1]))
-    print("Confusion matrix:\n {}".format(self.confusion_matrix))
-    print("Curve ROC area: {}".format(self.roc_area))
-    print(self.report)
+    print(f"Balanced accuracy score: {balanced_accuracy_score(self.y_pred, self.y_true)}")
+    # ~ self.end_epoch()
+    # ~ print("Balanced accuracy score: {}".format(self.balanced_accuracy[self.current_experiment_name][-1]))
+    # ~ print("Confusion matrix:\n {}".format(self.confusion_matrix))
+    # ~ print("Curve ROC area: {}".format(self.roc_area))
+    # ~ print(self.report)
+    pass
     
   def plot(self):
     print(self.batch_count)

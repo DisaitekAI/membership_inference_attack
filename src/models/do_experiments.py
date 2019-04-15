@@ -18,7 +18,7 @@ if utils_path.as_posix() not in sys.path:
   sys.path.insert(0, utils_path.as_posix())
   
 from experiment import experiment
-from utils_modules import Flatten
+from utils_modules import Flatten, Print
 from collections import OrderedDict
 from statistics import Statistics
 import torch.nn as nn
@@ -47,7 +47,7 @@ def main():
                ('relu2'       , nn.ReLU()),
                ('maxpool2'    , nn.MaxPool2d(2, 2)),
                ('to1d'        , Flatten()),
-               ('dense1'      , nn.Linear(11*11*10, 500)),
+               ('dense1'      , nn.Linear(5*5*10, 500)),
                ('tanh'        , nn.Tanh()),
                ('dense2'      , nn.Linear(500, 10)),
                ('logsoftmax'  , nn.LogSoftmax(dim=1))
@@ -72,7 +72,7 @@ def main():
                ('maxpool2'    , nn.MaxPool2d(2, 2)),
                ('dropout2'    , nn.Dropout(p = 0.5)),
                ('to1d'        , Flatten()),
-               ('dense1'      , nn.Linear(11*11*10, 500)),
+               ('dense1'      , nn.Linear(5*5*10, 500)),
                ('tanh'        , nn.Tanh()),
                ('dropout3'    , nn.Dropout(p = 0.5)),
                ('dense2'      , nn.Linear(500, 10)),

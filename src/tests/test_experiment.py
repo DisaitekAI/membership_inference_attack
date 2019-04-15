@@ -76,7 +76,7 @@ def test_experiment_mnist_custom(experiment_files_fixture):
                ('relu2'       , nn.ReLU()),
                ('maxpool2'    , nn.MaxPool2d(2, 2)),
                ('to1d'        , Flatten()),
-               ('dense1'      , nn.Linear(11*11*10, 500)),
+               ('dense1'      , nn.Linear(5*5*10, 500)),
                ('tanh'        , nn.Tanh()),
                ('dense2'      , nn.Linear(500, 10)),
                ('logsoftmax'  , nn.LogSoftmax(dim=1))

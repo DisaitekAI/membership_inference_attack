@@ -11,6 +11,23 @@ class Flatten(nn.Module):
   """
   def forward(self, x):
     return x.view(x.size()[0], -1)
+    
+class Print(nn.Module):
+  def __init__(self, title = None, print_inputs = False, print_shape = True):
+    super(Print, self).__init__()
+    
+    self.title        = title
+    self.print_inputs = print_inputs
+    self.print_shape  = print_shape
+    
+  def forward(self, x):
+    if self.title is not None:
+      print("\nPrint layer: " + self.title + "\n")
+    if self.print_inputs:
+      print(x)
+    if self.print_shape:
+      print(x.shape)
+    return x
 
 def weight_init(m):
   """
