@@ -29,16 +29,17 @@ def main():
   # default regularized model
   experiment(academic_dataset       = 'mnist', 
              target_model_path      = (models_path/'mnist_model.pt').as_posix(),
-             mia_model_path         = (models_path/'mia_model_default.pt').as_posix(),
+             mia_model_path         = (models_path/'mia_model_default').as_posix(),
              shadow_model_base_path = (models_path/'shadows'/'shadow_default').as_posix(),
-             mia_train_dataset_path = (data_path/'mia_train_dataset_default.pt').as_posix(),
-             mia_test_dataset_path  = (data_path/'mia_test_dataset_default.pt').as_posix(),
+             mia_train_dataset_path = (data_path/'mia_train_dataset_default').as_posix(),
+             mia_test_dataset_path  = (data_path/'mia_test_dataset_default').as_posix(),
+             class_number           = 10,
              stats                  = experiment_stats)
   
   # without regularization
   experiment(academic_dataset    = 'mnist', 
              target_model_path   = (models_path/'mnist_model.pt').as_posix(),
-             mia_model_path      = (models_path/'mia_model_exp1.pt').as_posix(),
+             mia_model_path      = (models_path/'mia_model_exp1').as_posix(),
              custom_target_model = OrderedDict([
                ('conv1'       , nn.Conv2d(1, 10, 3, 1)),
                ('relu1'       , nn.ReLU()),
@@ -54,14 +55,15 @@ def main():
              ]),
              shadow_number            = 50,
              shadow_model_base_path   = (models_path/'shadows'/'shadow_exp1').as_posix(),
-             mia_train_dataset_path   = (data_path/'mia_train_dataset_exp1.pt').as_posix(),
-             mia_test_dataset_path    = (data_path/'mia_test_dataset_exp1.pt').as_posix(),
+             mia_train_dataset_path   = (data_path/'mia_train_dataset_exp1').as_posix(),
+             mia_test_dataset_path    = (data_path/'mia_test_dataset_exp1').as_posix(),
+             class_number             = 10,
              stats                    = experiment_stats)
   
   # with dropout regularization
   experiment(academic_dataset    = 'mnist', 
              target_model_path   = (models_path/'mnist_model.pt').as_posix(),
-             mia_model_path      = (models_path/'mia_model_exp2.pt').as_posix(),
+             mia_model_path      = (models_path/'mia_model_exp2').as_posix(),
              custom_target_model = OrderedDict([
                ('conv1'       , nn.Conv2d(1, 10, 3, 1)),
                ('relu1'       , nn.ReLU()),
@@ -80,8 +82,9 @@ def main():
              ]),
              shadow_number            = 50,
              shadow_model_base_path   = (models_path/'shadows'/'shadow_exp2').as_posix(),
-             mia_train_dataset_path   = (data_path/'mia_train_dataset_exp2.pt').as_posix(),
-             mia_test_dataset_path    = (data_path/'mia_test_dataset_exp2.pt').as_posix(),
+             mia_train_dataset_path   = (data_path/'mia_train_dataset_exp2').as_posix(),
+             mia_test_dataset_path    = (data_path/'mia_test_dataset_exp2').as_posix(),
+             class_number             = 10,
              stats                    = experiment_stats)
              
   # ~ experiment_stats.print_results()

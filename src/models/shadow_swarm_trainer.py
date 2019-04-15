@@ -14,7 +14,7 @@ import torch.utils.data
 import torch.optim as optim
 from copy import deepcopy
 from utils_modules import weight_init, train
-from miscellaneous import progress_bar, max_label
+from miscellaneous import progress_bar
 from torch.utils.data import TensorDataset
 
 def get_mia_train_dataset(dataset                  = None, 
@@ -23,7 +23,8 @@ def get_mia_train_dataset(dataset                  = None,
                           use_cuda                 = False,
                           custom_shadow_optim_args = None,
                           shadow_model_base_path   = None,
-                          mia_dataset_path         = None):
+                          mia_dataset_path         = None,
+                          class_number             = None):
   """
   create a dataset for the MIA model.
   
@@ -33,17 +34,18 @@ def get_mia_train_dataset(dataset                  = None,
   :use_cuda
   :custom_shadow_optim_args
   :shadow_model_base_path
+  :mia_dataset_path
+  :class_number
   """
   
   if (dataset                is None) or \
      (shadow_number          is None) or \
      (shadow_model           is None) or \
      (mia_dataset_path       is None) or \
+     (class_number           is None) or \
      (shadow_model_base_path is None):
-    raise ValueError("swhadow_swarm_trainer: the following arguments" 
-                     "are required to be set: shadow_model_base_path"
-                     ", dataset, shadow_number, shadow_model, "
-                     "mia_dataset_path")
+    raise ValueError("get_mia_train_dataset: one of the requiered "
+                     "argument is not set")
   
   # test if shadow models needs to be trained or whether the work is 
   # already done. So we test if there is a shadow model with the last 
@@ -56,17 +58,32 @@ def get_mia_train_dataset(dataset                  = None,
   device = torch.device('cuda' if use_cuda else 'cpu')
   dataset_size = len(dataset)
   shadow_models = []
+  mia_datasets_dir = pathlib.Path(mia_dataset_path)
   
   if last_shadow_model_path.exists() and (not more_shadow_model_path.exists()):
-    if pathlib.Path(mia_dataset_path).exists():
-      # all the work is done, return the last dataset
-      print("\nloading the last MIA dataset")
-      return torch.load(mia_dataset_path)
-    else:
-      # the MIA dataset creation has not been done, load the shadow models
-      print("\nloading shadow models")
-      for i in range(shadow_number):
-        shadow_models.append(torch.load(shadow_model_base_path + "_{}.pt".format(i)))
+    need_to_work = False
+    for i in range(class_number):
+      if not (mia_datasets_dir/f"class_{i}.pt").exists():
+        # some of the training dataset is missing, so they have to be 
+        # built
+        need_to_work = True
+        break
+    
+    if not need_to_work:
+      print("loading the MIA train datasets")
+      mia_datasets = list()
+      for i in range(class_number):
+        mia_datasets.append(torch.load((mia_datasets_dir/f"class_{i}.pt").as_posix()))
+        
+      return mia_datasets
+      
+    if not mia_datasets_dir.exists():
+      mia_datasets_dir.mkdir()
+      
+    # the MIA dataset creation has not been done, load the shadow models
+    print("\nloading shadow models")
+    for i in range(shadow_number):
+      shadow_models.append(torch.load(f"{shadow_model_base_path}_{i}.pt"))
   else:
     # nothing has been done, train the shadow models
     print("\ntraining shadow models")
@@ -124,18 +141,19 @@ def get_mia_train_dataset(dataset                  = None,
       progress_bar(iteration = i, total = shadow_number - 1)
   
   # set all shadow models in evaluation mode
-  print("\nbuilding the MIA train dataset")
+  print("\nbuilding the MIA train datasets")
   for i in range(shadow_number):
     shadow_models[i].eval()
     
-  # build the MIA dataset
-  input_activation_tensor_list  = list()
-  input_targetclass_tensor_list = list()
-  output_tensor_list            = list()
+  # build the MIA datasets
+  input_tensor_lists  = list()
+  output_tensor_lists = list()
+  for i in range(class_number):
+    input_tensor_lists.append(list())
+    output_tensor_lists.append(list())
   
   i = 0
   test_loader = torch.utils.data.DataLoader(dataset, batch_size = 1, shuffle = False, **cuda_args)
-  class_number = max_label(test_loader) + 1 # assuming the target solves a classification task 
   
   # TODO(PI) no maximal parallelism right now because of a batch size of 1,
   # so it's quite long. The problem is we have to keep track of which 
@@ -144,9 +162,6 @@ def get_mia_train_dataset(dataset                  = None,
   with torch.no_grad():
     for data, targets in test_loader:
       data, targets = data.to(device), targets.to(device)
-      
-      one_hot_target = torch.zeros([1, class_number], dtype = torch.float)
-      one_hot_target[0][targets[0]] = 1.0 # assuming the target solves a classification task 
 
       shadow_index = int(i/shadow_number)
       i += 1
@@ -156,41 +171,64 @@ def get_mia_train_dataset(dataset                  = None,
           mia_output = torch.tensor([1])
           
         shadow_output = shadow_models[j](data)
-        input_activation_tensor_list.append(shadow_output)
-        input_targetclass_tensor_list.append(one_hot_target)
-        output_tensor_list.append(mia_output)
+        input_tensor_lists[targets[0]].append(shadow_output)
+        output_tensor_lists[targets[0]].append(mia_output)
         
       progress_bar(iteration = i, total = dataset_size)
-
-  mia_dataset = TensorDataset(torch.cat(input_activation_tensor_list),
-                              torch.cat(input_targetclass_tensor_list),
-                              torch.cat(output_tensor_list))
-  torch.save(mia_dataset, mia_dataset_path)
   
-  return mia_dataset
+  mia_datasets = list()
+  for i in range(class_number):
+    mia_datasets.append(TensorDataset(torch.cat(input_tensor_lists[i]),
+                                      torch.cat(output_tensor_lists[i])))
+
+    torch.save(mia_datasets[i], (mia_datasets_dir/f"class_{i}.pt").as_posix())
+  
+  return mia_datasets
       
 def get_mia_test_dataset(train_dataset    = None,
                          test_dataset     = None,
                          target_model     = None,
                          use_cuda         = False,
-                         mia_dataset_path = None):
-  if pathlib.Path(mia_dataset_path).exists():
-    print('loading the last MIA test dataset')
-    return torch.load(mia_dataset_path)
+                         mia_dataset_path = None,
+                         class_number     = None):
+  if (mia_dataset_path is None) or (class_number is None):
+    raise ValueError("get_mia_test_dataset: one of the required "
+                     "argument is not set")
   
-  print('building the MIA test dataset')
+  mia_datasets_dir = pathlib.Path(mia_dataset_path)                   
+  need_to_work = False
+  for i in range(class_number):
+    if not (mia_datasets_dir/f"class_{i}.pt").exists():
+      # some of the training dataset is missing, so they have to be 
+      # built
+      need_to_work = True
+      break
+  
+  if not need_to_work:
+    print("loading the MIA test datasets")
+    mia_datasets = list()
+    for i in range(class_number):
+      mia_datasets.append(torch.load((mia_datasets_dir/f"class_{i}.pt").as_posix()))
+      
+    return mia_datasets
+  
+  if not mia_datasets_dir.exists():
+    mia_datasets_dir.mkdir()
+      
+  print('building the MIA test datasets')
                            
   cuda_args = { 'num_workers' : 1, 'pin_memory' : True } if use_cuda else {}
   device = torch.device('cuda' if use_cuda else 'cpu')  
   
-  input_activation_tensor_list  = list()
-  input_targetclass_tensor_list = list()
-  output_tensor_list            = list()
+  input_tensor_lists  = list()
+  output_tensor_lists = list()
+  for i in range(class_number):
+    input_tensor_lists.append(list())
+    output_tensor_lists.append(list())
   
   i = 0
   train_loader = torch.utils.data.DataLoader(train_dataset, batch_size = 1, shuffle = False, **cuda_args)
-  test_loader  = torch.utils.data.DataLoader(test_dataset, batch_size = 1, shuffle = False, **cuda_args)
-  class_number = max_label(test_loader) + 1 # assuming the target solves a classification task 
+  test_loader  = torch.utils.data.DataLoader(test_dataset, batch_size = 1, shuffle = False, **cuda_args) 
   dataset_size = len(train_dataset) + len(test_dataset)
   
   with torch.no_grad():
@@ -198,34 +236,26 @@ def get_mia_test_dataset(train_dataset    = None,
       i += 1
       data, targets = data.to(device), targets.to(device)
       
-      one_hot_target = torch.zeros([1, class_number], dtype = torch.float)
-      one_hot_target[0][targets[0]] = 1.0 # assuming the target solves a classification task 
-      
       output = target_model(data)
-      input_activation_tensor_list.append(output)
-      input_targetclass_tensor_list.append(one_hot_target)
-      output_tensor_list.append(torch.tensor([1]))
+      input_tensor_lists[targets[0]].append(output)
+      output_tensor_lists[targets[0]].append(torch.tensor([0]))
         
       progress_bar(iteration = i, total = dataset_size)
       
-  with torch.no_grad():
     for data, targets in test_loader:
       i += 1
       data, targets = data.to(device), targets.to(device)
-      
-      one_hot_target = torch.zeros([1, class_number], dtype = torch.float)
-      one_hot_target[0][targets[0]] = 1.0 # assuming the target solves a classification task 
 
       output = target_model(data)
-      input_activation_tensor_list.append(output)
-      input_targetclass_tensor_list.append(one_hot_target)
-      output_tensor_list.append(torch.tensor([0]))
+      input_tensor_lists[targets[0]].append(output)
+      output_tensor_lists[targets[0]].append(torch.tensor([0]))
         
       progress_bar(iteration = i, total = dataset_size)
-
-  mia_dataset = TensorDataset(torch.cat(input_activation_tensor_list),
-                              torch.cat(input_targetclass_tensor_list),
-                              torch.cat(output_tensor_list))
-  torch.save(mia_dataset, mia_dataset_path)
+      
+  mia_datasets = list() 
+  for i in range(class_number):
+    mia_datasets.append(TensorDataset(torch.cat(input_tensor_lists[i]),
+                                      torch.cat(output_tensor_lists[i])))
+    torch.save(mia_datasets[i], (mia_datasets_dir/f"class_{i}.pt").as_posix())
   
-  return mia_dataset
+  return mia_datasets

@@ -133,9 +133,6 @@ def test(model, device, test_loader, verbose = True, class_weights = None, test_
   test_loss = 0
   correct = 0
   
-  if verbose and class_weights is not None:
-    corrects = [0 for i in range(len(class_weights))]
-  
   with torch.no_grad():
     for batch in test_loader:
       input_list = batch[0:-1]
