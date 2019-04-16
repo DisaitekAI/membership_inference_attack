@@ -58,8 +58,11 @@ def get_mia_train_dataset(dataset                  = None,
   device = torch.device('cuda' if use_cuda else 'cpu')
   dataset_size = len(dataset)
   shadow_models = []
-  mia_datasets_dir = pathlib.Path(mia_dataset_path)
   
+  mia_datasets_dir = pathlib.Path(mia_dataset_path)
+  if not mia_datasets_dir.exists():
+    mia_datasets_dir.mkdir()
+      
   if last_shadow_model_path.exists() and (not more_shadow_model_path.exists()):
     need_to_work = False
     for i in range(class_number):
@@ -76,9 +79,6 @@ def get_mia_train_dataset(dataset                  = None,
         mia_datasets.append(torch.load((mia_datasets_dir/f"class_{i}.pt").as_posix()))
         
       return mia_datasets
-      
-    if not mia_datasets_dir.exists():
-      mia_datasets_dir.mkdir()
       
     # the MIA dataset creation has not been done, load the shadow models
     print("\nloading shadow models")

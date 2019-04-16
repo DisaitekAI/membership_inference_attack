@@ -26,17 +26,17 @@ import torch.nn as nn
 import pytest
 
 target_path = models_path/'test_mnist_model.pt'
-mia_path = models_path/'test_mia_model.pt'
+mia_path = models_path/'test_mia_model'
 shadow_base_path = models_path/'shadows'/'test_shadow'
-mia_train_ds_path = data_path/'test_mia_train_dataset.pt'
-mia_test_ds_path = data_path/'test_mia_test_dataset.pt'
+mia_train_ds_path = data_path/'test_mia_train_dataset'
+mia_test_ds_path = data_path/'test_mia_test_dataset'
   
 @pytest.fixture(scope = 'function')
 def remove_experiment_files():
   target_path.remove_p()
-  mia_path.remove_p()
-  mia_train_ds_path.remove_p()
-  mia_test_ds_path.remove_p()
+  mia_path.rmdir()
+  mia_train_ds_path.rmdir()
+  mia_test_ds_path.rmdir()
   
   base_dir = shadow_base_path.parent
   base_file_name = base_file.name
@@ -54,7 +54,8 @@ def test_experiment_mnist_basic():
              mia_model_path         = mia_path.as_posix(),
              shadow_model_base_path = shadow_base_path.as_posix(),
              mia_train_ds_path      = mia_train_ds_path.as_posix(),
-             mia_test_ds_path       = mia_test_ds_path.as_posix())
+             mia_test_ds_path       = mia_test_ds_path.as_posix(),
+             class_number           = 10)
   
   assert target_path.exists()
   assert mia_path.exists()
@@ -106,7 +107,8 @@ def test_experiment_mnist_custom(experiment_files_fixture):
              custom_shadow_optim_args = {'lr' : 0.02, 'momentum' : 0.3},
              shadow_model_base_path   = shadow_base_path.as_posix(),
              mia_train_ds_path        = mia_train_ds_path.as_posix(),
-             mia_test_ds_path         = mia_test_ds_path.as_posix())
+             mia_test_ds_path         = mia_test_ds_path.as_posix(),
+             class_number             = 10)
   
   assert target_path.exists()
   assert mia_path.exists()
