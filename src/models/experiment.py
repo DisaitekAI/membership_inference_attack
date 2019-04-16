@@ -21,6 +21,7 @@ from target import Target
 from shadow_swarm_trainer import get_mia_train_dataset, get_mia_test_dataset
 from mia_model import MIA_model
 from utils_modules import train, test
+from miscellaneous import fixed_random_split, BalancedSampler
 from statistics import Statistics
 
 import torch
@@ -96,6 +97,7 @@ def experiment(academic_dataset         = None,
   if (mia_model_path         is None) or \
      (mia_train_dataset_path is None) or \
      (class_number           is None) or \
+     (shadow_model_base_path is None) or \
      (mia_test_dataset_path  is None): 
     raise ValueError('experiment(): one of the required argument is not set')
   
@@ -103,6 +105,9 @@ def experiment(academic_dataset         = None,
   cuda_args = { 'num_workers' : 1, 'pin_memory' : True } if use_cuda else {}
   
   shadow_swarm_dataset = None
+  shadow_dir = pathlib.Path(shadow_model_base_path).parent
+  if not shadow_dir.exists():
+    shadow_dir.mkdir()
   
   # train / load target model if offline
   if academic_dataset is not None:
@@ -113,11 +118,15 @@ def experiment(academic_dataset         = None,
     if not pathlib.Path(target_model_path).exists():
       dg = Dataset_generator(method = 'academic', name = academic_dataset, train = True)
       train_set = dg.generate()
+      # we take only the first half of the dataset to train the model
+      # the second half is used to train the shadow models
+      half_len = int(len(train_set) / 2)
+      train_set, shadow_swarm_dataset = fixed_random_split(train_set, [half_len, len(train_set) - half_len])
+      
       train_loader = torch.utils.data.DataLoader(train_set, batch_size = 64, shuffle = True, **cuda_args)
       
       dg = Dataset_generator(method = 'academic', name = academic_dataset, train = False)
       test_set = dg.generate()
-      shadow_swarm_dataset = test_set
       test_loader = torch.utils.data.DataLoader(test_set, batch_size = 1000, shuffle = True, **cuda_args)
       
       model = None
@@ -141,8 +150,10 @@ def experiment(academic_dataset         = None,
       torch.save(model, target_model_path)
       
     if shadow_swarm_dataset is None:
-      dg = Dataset_generator(method = 'academic', name = academic_dataset, train = False)
-      shadow_swarm_dataset = dg.generate()
+      dg = Dataset_generator(method = 'academic', name = academic_dataset, train = True)
+      train_set = dg.generate()
+      half_len = int(len(train_set) / 2)
+      _, shadow_swarm_dataset = fixed_random_split(train_set, [half_len, len(train_set) - half_len])
   
   shadow_model = None
   if custom_shadow_model is None:
@@ -160,6 +171,9 @@ def experiment(academic_dataset         = None,
   # TODO(PI) only for mnist right now
   dg = Dataset_generator(method = 'academic', name = academic_dataset, train = True)
   train_set = dg.generate()
+  half_len = int(len(train_set) / 2)
+  train_set, _ = fixed_random_split(train_set, [half_len, len(train_set) - half_len])
+  
   dg = Dataset_generator(method = 'academic', name = academic_dataset, train = False)
   test_set = dg.generate()
   
@@ -187,7 +201,8 @@ def experiment(academic_dataset         = None,
       mia_models.append(nn.Sequential(custom_mia_model).to(device))
   
   # correction for class imbalance
-  weights = torch.tensor([2/shadow_number, 2 * (shadow_number-1)/shadow_number])
+  # ~ weights = torch.tensor([2/shadow_number, 2 * (shadow_number-1)/shadow_number])
+  weights = None
   
   # ~ train_sampler = WeightedRandomSampler(weights, num_samples = len(train_set), 
                                         # ~ replacement = True)
@@ -200,6 +215,7 @@ def experiment(academic_dataset         = None,
   # ~ test_loader  = torch.utils.data.DataLoader(test_set, batch_size = 1000, 
                                              # ~ shuffle = False, **cuda_args,
                                              # ~ sampler = train_sampler)
+                                             
   optim_args = { 'lr' : 0.01, 'momentum' : 0.5 }
   if custom_mia_optim_args is not None:
     optim_args = custom_mia_optim_args
@@ -211,12 +227,14 @@ def experiment(academic_dataset         = None,
   for i in range(class_number):
     print(f"training the MIA model for class {i}")  
     optimizer = optim.SGD(mia_models[i].parameters(), **optim_args)
-                                            
+    
+    balanced_train_dataset = BalancedSampler(mia_train_datasets[i])
     train_loader = torch.utils.data.DataLoader(mia_train_datasets[i], batch_size = 2 * shadow_number, 
-                                               shuffle = True, **cuda_args)    
-                                                                                      
+                                               sampler = balanced_train_dataset, **cuda_args)    
+                                                        
+    balanced_test_dataset = BalancedSampler(mia_train_datasets[i])
     test_loader  = torch.utils.data.DataLoader(mia_test_datasets[i], batch_size = 1000, 
-                                               shuffle = True, **cuda_args)
+                                               sampler = balanced_test_dataset, **cuda_args)
     
     for epoch in range(1, 5):
       train(mia_models[i], device, train_loader, optimizer, epoch, 

@@ -1,3 +1,8 @@
+import datetime
+import torch
+from torch._utils import _accumulate
+from torch import randperm
+from torch.utils.data import Subset
 
 def progress_bar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█'):
   """
@@ -32,3 +37,42 @@ def max_label(data_loader):
         m = target
         
   return m.item()
+  
+def fixed_random_split(dataset, lengths):
+  """
+  Randomly split a dataset into non-overlapping new datasets of given 
+  lengths. The seed of this random function is always 42.
+
+  Arguments:
+      dataset (Dataset): Dataset to be split
+      lengths (sequence): lengths of splits to be produced
+  """
+  if sum(lengths) != len(dataset):
+    raise ValueError("Sum of input lengths does not equal the length of the input dataset!")
+  
+  torch.manual_seed(42)
+  indices = randperm(sum(lengths))
+  torch.manual_seed(datetime.datetime.now().timestamp())
+  
+  return [Subset(dataset, indices[offset - length:offset]) for offset, length in zip(_accumulate(lengths), lengths)]
+  
+class BalancedSampler(torch.utils.data.sampler.Sampler):
+  def __init__(self, dataset):
+    self.indices     = list(range(len(dataset)))
+    self.num_samples = len(self.indices)
+    dataset_labels   = [y.item() for _, y in dataset] 
+    label_counter    = Counter(dataset_labels)
+    weights          = [1. / label_counter[label] for label in dataset_labels]
+    self.weights     = torch.DoubleTensor(weights)
+
+  def __iter__(self):
+    return (
+        self.indices[i] for i in torch.multinomial(
+          self.weights,
+          self.num_samples,
+          replacement = True
+      )
+    )
+    
+  def __len__(self):
+    return self.num_samples

@@ -23,12 +23,12 @@ from collections import OrderedDict
 from statistics import Statistics
 import torch.nn as nn
   
-def main():
+def main():  
   experiment_stats = Statistics()
   
   # default regularized model
   experiment(academic_dataset       = 'mnist', 
-             target_model_path      = (models_path/'mnist_model.pt').as_posix(),
+             target_model_path      = (models_path/'mnist_model_default.pt').as_posix(),
              mia_model_path         = (models_path/'mia_model_default').as_posix(),
              shadow_model_base_path = (models_path/'shadows'/'shadow_default').as_posix(),
              mia_train_dataset_path = (data_path/'mia_train_dataset_default').as_posix(),
@@ -38,7 +38,7 @@ def main():
   
   # without regularization
   experiment(academic_dataset    = 'mnist', 
-             target_model_path   = (models_path/'mnist_model.pt').as_posix(),
+             target_model_path   = (models_path/'mnist_model_exp1.pt').as_posix(),
              mia_model_path      = (models_path/'mia_model_exp1').as_posix(),
              custom_target_model = OrderedDict([
                ('conv1'       , nn.Conv2d(1, 10, 3, 1)),
@@ -62,7 +62,7 @@ def main():
   
   # with dropout regularization
   experiment(academic_dataset    = 'mnist', 
-             target_model_path   = (models_path/'mnist_model.pt').as_posix(),
+             target_model_path   = (models_path/'mnist_model_exp2.pt').as_posix(),
              mia_model_path      = (models_path/'mia_model_exp2').as_posix(),
              custom_target_model = OrderedDict([
                ('conv1'       , nn.Conv2d(1, 10, 3, 1)),
