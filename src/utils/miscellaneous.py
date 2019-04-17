@@ -3,6 +3,7 @@ import torch
 from torch._utils import _accumulate
 from torch import randperm
 from torch.utils.data import Subset
+from collections import Counter
 
 def progress_bar (iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█'):
   """

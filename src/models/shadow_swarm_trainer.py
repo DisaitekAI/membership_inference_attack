@@ -126,7 +126,7 @@ def get_mia_train_dataset(dataset                  = None,
       model = shadow_models[i]
       model.apply(weight_init)
       
-      data_loader = torch.utils.data.DataLoader(shadow_datasets[i], batch_size = 32, 
+      data_loader = torch.utils.data.DataLoader(shadow_datasets[i], batch_size = 16, 
                                                 shuffle = True, **cuda_args)
       optim_args = { 'lr' : 0.01, 'momentum' : 0.5 }
       if custom_shadow_optim_args is not None:
@@ -159,11 +159,12 @@ def get_mia_train_dataset(dataset                  = None,
   # so it's quite long. The problem is we have to keep track of which 
   # sample belongs to which shadow training dataset. It requires to fix 
   # this first to enable full parallelism with batch size.
+  base_dataset_size = int(dataset_size / shadow_number)
   with torch.no_grad():
     for data, targets in test_loader:
       data, targets = data.to(device), targets.to(device)
-
-      shadow_index = int(i/shadow_number)
+      
+      shadow_index = int(i / base_dataset_size)
       i += 1
       for j in range(shadow_number):
         mia_output = torch.tensor([0])
@@ -238,7 +239,7 @@ def get_mia_test_dataset(train_dataset    = None,
       
       output = target_model(data)
       input_tensor_lists[targets[0]].append(output)
-      output_tensor_lists[targets[0]].append(torch.tensor([0]))
+      output_tensor_lists[targets[0]].append(torch.tensor([1]))
         
       progress_bar(iteration = i, total = dataset_size)
       
