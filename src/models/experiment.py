@@ -189,9 +189,7 @@ def experiment(academic_dataset         = None,
                                            use_cuda,
                                            mia_test_dataset_path,
                                            class_number)  
-  # ~ train_size = int(0.8 * len(mia_dataset))
-  # ~ test_size  = len(mia_dataset) - train_size
-  # ~ train_set, test_set = torch.utils.data.random_split(mia_dataset, [train_size, test_size])
+                                           
   mia_models = list()
   if custom_mia_model is None:
     for i in range(class_number):
@@ -199,22 +197,6 @@ def experiment(academic_dataset         = None,
   else:
     for i in range(class_number):
       mia_models.append(nn.Sequential(custom_mia_model).to(device))
-  
-  # correction for class imbalance
-  # ~ weights = torch.tensor([2/shadow_number, 2 * (shadow_number-1)/shadow_number])
-  weights = None
-  
-  # ~ train_sampler = WeightedRandomSampler(weights, num_samples = len(train_set), 
-                                        # ~ replacement = True)
-  # ~ train_loader = torch.utils.data.DataLoader(train_set, batch_size = 2 * shadow_number, 
-                                             # ~ shuffle = False, **cuda_args, 
-                                             # ~ sampler = train_sampler)
-                                             
-  # ~ train_sampler = WeightedRandomSampler(weights, num_samples = len(test_set), 
-                                        # ~ replacement = True)                                          
-  # ~ test_loader  = torch.utils.data.DataLoader(test_set, batch_size = 1000, 
-                                             # ~ shuffle = False, **cuda_args,
-                                             # ~ sampler = train_sampler)
                                              
   optim_args = { 'lr' : 0.01, 'momentum' : 0.5 }
   if custom_mia_optim_args is not None:
@@ -235,18 +217,10 @@ def experiment(academic_dataset         = None,
     balanced_test_dataset = BalancedSampler(mia_test_datasets[i])
     test_loader  = torch.utils.data.DataLoader(mia_test_datasets[i], batch_size = 1000, 
                                                sampler = balanced_test_dataset, **cuda_args)
-                                               
-    # ~ train_loader = torch.utils.data.DataLoader(mia_train_datasets[i], batch_size = 32, 
-                                               # ~ shuffle = False, **cuda_args)  
-    # ~ test_loader  = torch.utils.data.DataLoader(mia_test_datasets[i], batch_size = 1000, 
-                                               # ~ shuffle = False, **cuda_args)                                           
+                                                                                        
     for epoch in range(1, 5):
-      train(mia_models[i], device, train_loader, optimizer, epoch, 
-            class_weights = weights)
-            
-      test(mia_models[i], device, test_loader, 
-           class_weights = weights, test_stats = stats)
-           
+      train(mia_models[i], device, train_loader, optimizer, epoch)
+      test(mia_models[i], device, test_loader, test_stats = stats)
       stats.print_results()
     
     torch.save(mia_models[i], (mia_model_dir/f"class_{i}.pt").as_posix())

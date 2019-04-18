@@ -12,6 +12,10 @@ class Flatten(nn.Module):
     return x.view(x.size()[0], -1)
     
 class Print(nn.Module):
+  """
+  Print the inputs and/or the shape of a layer. Used to debug models built
+  with an OrderedDict.
+  """
   def __init__(self, title = None, print_inputs = False, print_shape = True):
     super(Print, self).__init__()
     

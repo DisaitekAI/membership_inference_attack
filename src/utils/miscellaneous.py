@@ -65,6 +65,9 @@ class BalancedSampler(torch.utils.data.sampler.Sampler):
     weights          = [1. / label_counter[label] for label in dataset_labels]
     self.weights     = torch.DoubleTensor(weights)
     
+    # ~ the data loader refuse to use more samples than the dataset size
+    # ~ so this is not working. The sample number has the right value but the
+    # ~ torch data loader refuse to use it.
     if oversampling:
       max_key = 0
       max_val = 0
