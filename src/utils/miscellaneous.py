@@ -58,13 +58,25 @@ def fixed_random_split(dataset, lengths):
   return [Subset(dataset, indices[offset - length:offset]) for offset, length in zip(_accumulate(lengths), lengths)]
   
 class BalancedSampler(torch.utils.data.sampler.Sampler):
-  def __init__(self, dataset):
+  def __init__(self, dataset, oversampling = False):
     self.indices     = list(range(len(dataset)))
-    self.num_samples = len(self.indices)
     dataset_labels   = [y.item() for _, y in dataset] 
     label_counter    = Counter(dataset_labels)
     weights          = [1. / label_counter[label] for label in dataset_labels]
     self.weights     = torch.DoubleTensor(weights)
+    
+    if oversampling:
+      max_key = 0
+      max_val = 0
+      for key, val in label_counter.items():
+        if max_key < key:
+          max_key = key
+        if max_val < val:
+          max_val = val
+  
+      self.num_samples = max_val * (max_key + 1)
+    else:
+      self.num_samples = len(self.indices)
 
   def __iter__(self):
     return (

@@ -229,13 +229,17 @@ def experiment(academic_dataset         = None,
     optimizer = optim.SGD(mia_models[i].parameters(), **optim_args)
     
     balanced_train_dataset = BalancedSampler(mia_train_datasets[i])
-    train_loader = torch.utils.data.DataLoader(mia_train_datasets[i], batch_size = 2 * shadow_number, 
+    train_loader = torch.utils.data.DataLoader(mia_train_datasets[i], batch_size = 32, 
                                                sampler = balanced_train_dataset, **cuda_args)    
                                                         
     balanced_test_dataset = BalancedSampler(mia_test_datasets[i])
     test_loader  = torch.utils.data.DataLoader(mia_test_datasets[i], batch_size = 1000, 
                                                sampler = balanced_test_dataset, **cuda_args)
-    
+                                               
+    # ~ train_loader = torch.utils.data.DataLoader(mia_train_datasets[i], batch_size = 32, 
+                                               # ~ shuffle = False, **cuda_args)  
+    # ~ test_loader  = torch.utils.data.DataLoader(mia_test_datasets[i], batch_size = 1000, 
+                                               # ~ shuffle = False, **cuda_args)                                           
     for epoch in range(1, 5):
       train(mia_models[i], device, train_loader, optimizer, epoch, 
             class_weights = weights)

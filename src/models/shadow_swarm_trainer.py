@@ -236,7 +236,7 @@ def get_mia_test_dataset(train_dataset    = None,
     for data, targets in train_loader:
       i += 1
       data, targets = data.to(device), targets.to(device)
-      
+
       output = target_model(data)
       input_tensor_lists[targets[0]].append(output)
       output_tensor_lists[targets[0]].append(torch.tensor([1]))
