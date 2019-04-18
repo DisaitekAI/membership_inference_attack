@@ -1,4 +1,5 @@
-from sklearn.metrics import confusion_matrix, classification_report, balanced_accuracy_score, roc_auc_score, classification_report, roc_curve
+from sklearn.metrics import confusion_matrix, classification_report, balanced_accuracy_score, \
+roc_auc_score, classification_report, roc_curve
 import matplotlib.pyplot as plt
 from matplotlib import ticker
 import numpy as np
@@ -9,6 +10,7 @@ class Statistics:
     self.y_true = []
     self.balanced_accuracy = dict()
     self.list_experiment = []
+    
     self.current_experiment_name = ""
     self.list_experiment = []
     self.param = dict()
@@ -18,26 +20,34 @@ class Statistics:
     self.batch_count = dict()
     self.epoch_count = dict()
 
+
+    
+    ############# Entrées #############
+    
   def new_experiment(self, name, parameters):
-    self.current_experiment_name = name
-    self.list_experiment.append([self.current_experiment_name, parameters])
+    self.current_experiment_name = "{} ".format(len(self.list_experiment)) + name
+    self.list_experiment.append(self.current_experiment_name)
     self.param[self.current_experiment_name] = parameters
+    
     self.balanced_accuracy[self.current_experiment_name] = []
     self.roc_area[self.current_experiment_name] = []
     self.batch_count[self.current_experiment_name] = 0
     self.epoch_count[self.current_experiment_name] = 0
+    self.y_pred = []
+    self.y_true = []
 
+    
   def new_epoch(self):
     self.epoch_count[self.current_experiment_name] += 1
         
   def add_batch_results(self, batch_pred, batch_true):
-    # ~ if (self.epoch_count[self.current_experiment_name] == 1):
-        # ~ self.batch_count[self.current_experiment_name] += 1
-    self.y_pred += batch_pred
-    self.y_true += batch_true
-    # ~ self.balanced_accuracy[self.current_experiment_name].append(balanced_accuracy_score(self.y_pred, self.y_true))
-    # ~ self.roc_area[self.current_experiment_name].append(roc_auc_score(self.y_pred, self.y_true))
-    pass
+    if self.epoch_count[self.current_experiment_name] == 1:
+        self.batch_count[self.current_experiment_name] += 1
+    self.y_pred.extend(batch_pred)
+    self.y_true.extend(batch_true)
+    new_accuracy = balanced_accuracy_score(self.y_pred, self.y_true)
+    self.balanced_accuracy[self.current_experiment_name].append(new_accuracy)
+    self.roc_area[self.current_experiment_name].append(roc_auc_score(self.y_pred, self.y_true))
     
   def end_epoch(self):
     self.confusion_matrix = confusion_matrix(self.y_pred, self.y_true)
@@ -46,21 +56,19 @@ class Statistics:
     self.y_true = []
     self.iteration = 0
 
+    ############# Sorties #############
+
+    
   def save(self, file_path): # à appeler à la toute fin
-    pass
+    return
     
   def print_results(self): # à appeler à chaque fin d'epoch
-    print(f"Balanced accuracy score: {balanced_accuracy_score(self.y_pred, self.y_true)}")
-    print(classification_report(self.y_pred, self.y_true))
-    print(confusion_matrix(self.y_pred, self.y_true))
-    self.y_pred = []
-    self.y_true = []
-    # ~ self.end_epoch()
-    # ~ print("Balanced accuracy score: {}".format(self.balanced_accuracy[self.current_experiment_name][-1]))
-    # ~ print("Confusion matrix:\n {}".format(self.confusion_matrix))
-    # ~ print("Curve ROC area: {}".format(self.roc_area))
-    # ~ print(self.report)
-    pass
+    self.end_epoch()
+    print("Balanced accuracy score: {}".format(self.balanced_accuracy[self.current_experiment_name][-1]))
+    print("Confusion matrix:\n {}".format(self.confusion_matrix))
+    print("Curve ROC area: {}".format(self.roc_area[self.current_experiment_name][-1]))
+    print(self.report)
+    
     
   def plot(self):
     print(self.batch_count)
@@ -82,6 +90,7 @@ class Statistics:
         #plt.axvline(x=i*self.epoch_count,color='red')
     #plt.show()
     fig.tight_layout()
+    return
     
 # ~ https://scikit-learn.org/stable/modules/generated/sklearn.metrics.confusion_matrix.html
 # ~ https://scikit-learn.org/stable/modules/generated/sklearn.metrics.accuracy_score.html
@@ -94,5 +103,3 @@ class Statistics:
     # ~ plusieurs fonction de test (une par epoch d'entrainement)
       # ~ pour chaque test tu as plusieurs résultats de batch
         # ~ toi tu reçois les résultats d'un batch 
-
-# remplacer les "" par des f""
