@@ -22,7 +22,8 @@ from statistics import Statistics
 
 
 class TestStatistics(unittest.TestCase):
-    def test_new_exp1(self,st):
+    def test_new_exp1(self):
+        st = Statistics()
         st.new_experiment("loremipsum", {"batch_size": 64, "lambda": 17})
         n = "{} ".format(len(st.list_experiment) - 1) + "loremipsum"
         self.assertEqual(st.current_experiment_name, n)
@@ -33,12 +34,17 @@ class TestStatistics(unittest.TestCase):
         self.assertEqual(st.batch_count[n], 0)
         self.assertEqual(st.epoch_count[n], 0)
     
-    def test_new_ep(self,st):
+    def test_new_ep(self):
+        st = Statistics()
+        st.new_experiment("loremipsum", {"batch_size": 64, "lambda": 17})
         past_epoch_count = st.epoch_count[st.current_experiment_name]
         st.new_epoch()
         self.assertEqual(st.epoch_count[st.current_experiment_name], past_epoch_count + 1)
         
-    def test_new_add_b1(self, st):
+    def test_new_add_b1(self):
+        st = Statistics()
+        st.new_experiment("loremipsum", {"batch_size": 64, "lambda": 17})
+        st.new_epoch()
         pred = [0,0,0,0,1]
         real = [1,0,0,0,1]
         past_number_batch = st.batch_count[st.current_experiment_name]
@@ -58,18 +64,22 @@ class TestStatistics(unittest.TestCase):
         self.assertEqual(st.balanced_accuracy[st.current_experiment_name][-1], 0.875)
         self.assertEqual(st.roc_area[st.current_experiment_name][-1], 0.875)
         
-    def test_new_exp2(self,st):
+    def test_new_exp2(self):
+        st = Statistics()
         st.new_experiment("alive", {"batch_size": 64, "beta": 17})
         n = "{} ".format(len(st.list_experiment) - 1) + "alive"
         self.assertEqual(st.current_experiment_name, n)
         self.assertEqual(st.list_experiment[-1], n)
-        self.assertEqual(st.param[n], {"batch_size": 64, "lambda": 17})
+        self.assertEqual(st.param[n], {"batch_size": 64, "beta": 17})
         self.assertEqual(st.balanced_accuracy[n], [])
         self.assertEqual(st.roc_area[n], [])
         self.assertEqual(st.batch_count[n], 0)
         self.assertEqual(st.epoch_count[n], 0)
         
-    def test_new_add_b2(self, st):
+    def test_new_add_b2(self):
+        st = Statistics()
+        st.new_experiment("alive", {"batch_size": 64, "beta": 17})
+        st.new_epoch()
         pred = [0,0,0,0,1,0,1,1,1]
         real = [1,0,0,0,1,0,1,0,1]
         past_number_batch = st.batch_count[st.current_experiment_name]
@@ -172,5 +182,4 @@ def main():
 
 if __name__ == '__main__':
     #main()
-    print("azda")
     unittest.main()
