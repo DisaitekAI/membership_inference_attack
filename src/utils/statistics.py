@@ -72,7 +72,6 @@ class Statistics:
 
       def save(self, log_dir):
         self.process_batchs()
-        pass
     
       def print_results(self):
         self.process_batchs()
@@ -82,6 +81,9 @@ class Statistics:
             print("Paramètres :\n")
             print(experiment["param"])
             print("\n")
+
+            groups = dict()
+
             for model in experiment["model_training"]:
                 
                 if model["name"] != None:
@@ -92,9 +94,24 @@ class Statistics:
                         print("\n")
 
                 if model["label"] != None:
-                    print()
+                    if model["label"] in classes:
+                        groups[model["label"]].append(model)
+                    else:
+                        groups[model["label"]] = [model]
 
-            
+            for group_label in groups:
+                print("\nAverage statistics of the " + group_label + "models :\n")
+                for measure_name in groups["group_label"][0]: # every models with same label must have same measures
+                        values = [groups["group_label"]["measure_name"][k] for k in groups["group_label"]["measure_name"]]
+                        average = None
+                        if type(values[0]) == int:
+                            average = sum(values)/len(values)
+                        if type(values[0]) == list:
+                            average = [sum(x) / len(x) for x in zip(*values)]
+                        if average != None:
+                            print("\n" + measure_name + "\n")
+                            print(average)
+                            print("\n")
 
         
         # ~ print(f"Balanced accuracy score: {balanced_accuracy_score(self.y_pred, self.y_true)}")
