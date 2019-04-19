@@ -24,7 +24,8 @@ def get_mia_train_dataset(dataset                  = None,
                           custom_shadow_optim_args = None,
                           shadow_model_base_path   = None,
                           mia_dataset_path         = None,
-                          class_number             = None):
+                          class_number             = None,
+                          stats                    = None):
   """
   create a dataset for the MIA model.
   
@@ -126,16 +127,26 @@ def get_mia_train_dataset(dataset                  = None,
       model = shadow_models[i]
       model.apply(weight_init)
       
-      data_loader = torch.utils.data.DataLoader(shadow_datasets[i], batch_size = 16, 
+      j = 0
+      if j == i:
+        j = 1
+      
+      train_loader = torch.utils.data.DataLoader(shadow_datasets[i], batch_size = 16, 
                                                 shuffle = True, **cuda_args)
+      test_loader = torch.utils.data.DataLoader(shadow_datasets[j], batch_size = 16, 
+                                                shuffle = True, **cuda_args)
+                                                
       optim_args = { 'lr' : 0.01, 'momentum' : 0.5 }
       if custom_shadow_optim_args is not None:
         optim_args = custom_shadow_optim_args
           
       optimizer = optim.SGD(model.parameters(), **optim_args)
       
+      stats.new_train(label = "shadow-model")
       for epoch in range(20):
-        train(model, device, data_loader, optimizer, epoch, verbose = False)
+        stats.new_epoch()
+        train(model, device, train_loader, optimizer, epoch, verbose = False)
+        test(mia_models[i], device, test_loader, test_stats = stats, verbose = False)
       
       torch.save(model, shadow_model_base_path + "_{}.pt".format(i))
       progress_bar(iteration = i, total = shadow_number - 1)

@@ -150,7 +150,7 @@ def test(model, device, test_loader, verbose = True, class_weights = None, test_
       correct += pred.eq(target.view_as(pred)).sum().item()
 
       if test_stats is not None:
-        test_stats.add_batch_results(pred.view_as(target).tolist(), target.tolist())
+        test_stats.new_batch(pred.view_as(target).tolist(), target.tolist())
             
   test_loss /= len(test_loader.dataset)
 

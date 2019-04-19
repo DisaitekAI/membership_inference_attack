@@ -143,9 +143,11 @@ def experiment(academic_dataset         = None,
       optimizer = optim.SGD(model.parameters(), **optim_args)
       
       print('training the target model')
+      stats.new_train(name = 'target model')
       for epoch in range(1, 5):
+        stats.new_epoch()
         train(model, device, train_loader, optimizer, epoch)
-        test(model, device, test_loader)
+        test(model, device, test_loader, test_stats = stats)
 
       torch.save(model, target_model_path)
       
@@ -166,7 +168,7 @@ def experiment(academic_dataset         = None,
                                              custom_shadow_optim_args,
                                              shadow_model_base_path,
                                              mia_train_dataset_path,
-                                             class_number)
+                                             class_number, stats)
   
   # TODO(PI) only for mnist right now
   dg = Dataset_generator(method = 'academic', name = academic_dataset, train = True)
@@ -217,10 +219,12 @@ def experiment(academic_dataset         = None,
     balanced_test_dataset = BalancedSampler(mia_test_datasets[i])
     test_loader  = torch.utils.data.DataLoader(mia_test_datasets[i], batch_size = 1000, 
                                                sampler = balanced_test_dataset, **cuda_args)
-                                                                                        
+    
+    stats.new_train(name = f"MIA model {i}", label = "mia-model")                                                                          
     for epoch in range(1, 5):
+      stats.new_epoch()
       train(mia_models[i], device, train_loader, optimizer, epoch)
       test(mia_models[i], device, test_loader, test_stats = stats)
-      stats.print_results()
+  
     
     torch.save(mia_models[i], (mia_model_dir/f"class_{i}.pt").as_posix())
