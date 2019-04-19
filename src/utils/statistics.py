@@ -1,75 +1,115 @@
-from sklearn.metrics import confusion_matrix, classification_report, balanced_accuracy_score, \
-roc_auc_score, classification_report, roc_curve
+from sklearn.metrics import confusion_matrix, classification_report, balanced_accuracy_score, roc_auc_score, classification_report, roc_curve
 import matplotlib.pyplot as plt
 from matplotlib import ticker
 import numpy as np
 
 class Statistics:
-    def __init__(self):
+      def __init__(self):
         self.y_pred = []
         self.y_true = []
-        self.balanced_accuracy = dict()
-        self.list_experiment = []
-
-        self.current_experiment_name = ""
-        self.list_experiment = []
-        self.param = dict()
-        self.confusion_matrix = [[0,0],[0,0]]
-        self.roc_area = dict()
-        self.report = ""
-        self.batch_count = dict()
-        self.epoch_count = dict()
-
-
+        self.exp = []
+        # ~ self.balanced_accuracy = dict()
+        # ~ self.list_experiment = []
+        # ~ self.current_experiment_name = ""
+        # ~ self.list_experiment = []
+        # ~ self.param = dict()
+        # ~ self.confusion_matrix = [[0,0],[0,0]]
+        # ~ self.roc_area = dict()
+        # ~ self.report = ""
+        # ~ self.batch_count = dict()
+        # ~ self.epoch_count = dict()
     
-    ############# Entrées #############
-    
-    def new_experiment(self, name, parameters):
-        self.current_experiment_name = "{} ".format(len(self.list_experiment)) + name
-        self.list_experiment.append(self.current_experiment_name)
-        self.param[self.current_experiment_name] = parameters
 
-        self.balanced_accuracy[self.current_experiment_name] = []
-        self.roc_area[self.current_experiment_name] = []
-        self.batch_count[self.current_experiment_name] = 0
-        self.epoch_count[self.current_experiment_name] = 0
-        self.y_pred = []
-        self.y_true = []
+      def new_experiment(self, name, parameters):
+        self.process_batchs()
+        experiment = {"name": name, "param": parameters, "model_training": []}
+        self.exp.append(experiment)
+        # ~ self.current_experiment_name = name
+        # ~ self.list_experiment.append([self.current_experiment_name, parameters])
+        # ~ self.param[self.current_experiment_name] = parameters
+        # ~ self.balanced_accuracy[self.current_experiment_name] = []
+        # ~ self.roc_area[self.current_experiment_name] = []
+        # ~ self.batch_count[self.current_experiment_name] = 0
+        # ~ self.epoch_count[self.current_experiment_name] = 0
 
+      def new_train(self, name = None, label = None):
+        """
+        define a new model training.
     
-    def new_epoch(self):
-        self.epoch_count[self.current_experiment_name] += 1
+        :name name of the training. 
+        :label group model training with the same label. 
+        """
+        self.process_batchs()
+        model = {"name": name, "label" :label, "measures": {"balanced_accuracy": []} }
+        self.exp[-1]["model_training"].append(model)
+
+      def new_epoch(self):
+        self.process_batchs()
+        # ~ self.epoch_count[self.current_experiment_name] += 1
         
-    def add_batch_results(self, batch_pred, batch_true):
-        if self.epoch_count[self.current_experiment_name] == 1:
-            self.batch_count[self.current_experiment_name] += 1
+      def new_batch(self, batch_pred, batch_true):
+        # ~ if (self.epoch_count[self.current_experiment_name] == 1):
+            # ~ self.batch_count[self.current_experiment_name] += 1
         self.y_pred.extend(batch_pred)
         self.y_true.extend(batch_true)
-        new_accuracy = balanced_accuracy_score(self.y_pred, self.y_true)
-        self.balanced_accuracy[self.current_experiment_name].append(new_accuracy)
-        self.roc_area[self.current_experiment_name].append(roc_auc_score(self.y_pred, self.y_true))
+        # ~ self.balanced_accuracy[self.current_experiment_name].append(balanced_accuracy_score(self.y_pred, self.y_true))
+        # ~ self.roc_area[self.current_experiment_name].append(roc_auc_score(self.y_pred, self.y_true))
     
-    def end_epoch(self):
-        self.confusion_matrix = confusion_matrix(self.y_pred, self.y_true)
-        self.report = classification_report(self.y_pred, self.y_true)
-        self.y_pred = []
+  # ~ def end_epoch(self):
+    # ~ self.confusion_matrix = confusion_matrix(self.y_pred, self.y_true)
+    # ~ self.report = classification_report(self.y_pred, self.y_true)
+    # ~ self.y_pred = []
+    # ~ self.y_true = []
+    # ~ self.iteration = 0
+
+      def process_batchs(self):
+        if len(self.y_true) != 0:
+            accuracy = balanced_accuracy_score(self.y_pred, self.y_true)
+            self.exp[-1]["model_training"][-1]["measures"]["balanced_accuracy"].append(accuracy)
+
         self.y_true = []
-        self.iteration = 0
+        self.y_pred = []
 
-    ############# Sorties #############
+      def save(self, log_dir):
+        self.process_batchs()
+        pass
+    
+      def print_results(self):
+        self.process_batchs()
 
-    def save(self, file_path): # à appeler à la toute fin
-        return
+        for experiment in self.exp:
+            print("\n   Expérience" + experiment["name"] + " :\n")
+            print("Paramètres :\n")
+            print(experiment["param"])
+            print("\n")
+            for model in experiment["model_training"]:
+                
+                if model["name"] != None:
+                    print("\n   Modèle" + model["name"] + " :\n")
+                    for measure_name in model["measures"]:
+                        print("\n" + measure_name)
+                        print(model["measures"][measure_name])
+                        print("\n")
+
+                if model["label"] != None:
+                    print()
+
+            
+
+        
+        # ~ print(f"Balanced accuracy score: {balanced_accuracy_score(self.y_pred, self.y_true)}")
+        # ~ print(classification_report(self.y_pred, self.y_true))
+        # ~ print(confusion_matrix(self.y_pred, self.y_true))
+        # ~ self.y_pred = []
+        # ~ self.y_true = []
+        # ~ self.end_epoch()
+        # ~ print("Balanced accuracy score: {}".format(self.balanced_accuracy[self.current_experiment_name][-1]))
+        # ~ print("Confusion matrix:\n {}".format(self.confusion_matrix))
+        # ~ print("Curve ROC area: {}".format(self.roc_area))
+        # ~ print(self.report)
+        
     
-    def print_results(self): # à appeler à chaque fin d'epoch
-        self.end_epoch()
-        print("Balanced accuracy score: {}".format(self.balanced_accuracy[self.current_experiment_name][-1]))
-        print("Confusion matrix:\n {}".format(self.confusion_matrix))
-        print("Curve ROC area: {}".format(self.roc_area[self.current_experiment_name][-1]))
-        print(self.report)
-    
-    
-    def plot(self):
+      def plot(self):
         print(self.batch_count)
         print(self.epoch_count)
         fig, ax1 = plt.subplots(1,1,figsize=(5,3),dpi=100)
@@ -89,16 +129,38 @@ class Statistics:
             #plt.axvline(x=i*self.epoch_count,color='red')
         #plt.show()
         fig.tight_layout()
-        return 
+  
     
-# ~ https://scikit-learn.org/stable/modules/generated/sklearn.metrics.confusion_matrix.html
-# ~ https://scikit-learn.org/stable/modules/generated/sklearn.metrics.accuracy_score.html
-# ~ https://scikit-learn.org/stable/modules/generated/sklearn.metrics.auc.html
-# ~ https://scikit-learn.org/stable/modules/generated/sklearn.metrics.classification_report.html
-# ~ https://scikit-learn.org/stable/modules/generated/sklearn.metrics.balanced_accuracy_score.html
 
-# ~ Plusieurs experiences
-  # ~ pour chaque experience
-    # ~ plusieurs fonction de test (une par epoch d'entrainement)
-      # ~ pour chaque test tu as plusieurs résultats de batch
-        # ~ toi tu reçois les résultats d'un batch 
+# ~ new_experiment
+  # ~ -> new_train(soit label, soit name, soit les deux)
+      # ~ -> new_epoch
+          # ~ -> new_batch(results)
+            # ~ batchs.append(results)
+          
+  # ~ -> new_train
+    # ~ ...
+    
+# ~ new_experiment
+  # ~ ....
+  
+# ~ print_results
+# ~ save
+
+# ~ 1 - ecrire la classe statistics pour la balanced accuracy score (le tester avec le code)
+# ~ 2 - écrire ou update les tests unitaires
+# ~ 3 - ajouter une measure (tester)
+# ~ 4 - update les tests unitaires
+# ~ 5 - go to 3
+
+# ~ Data de la classe stats : 
+  # ~ exps = [ experiment1, experiment2, ..... ]
+    # ~ -> experiment
+        # ~ -> name
+        # ~ -> params
+        # ~ -> model_training = [ model1, model2 .... ]
+            # ~ -> model
+              # ~ -> name or None
+              # ~ -> label or None
+              # ~ -> measures = { name_measure1 : value, name_measure2 : value , .... }
+
