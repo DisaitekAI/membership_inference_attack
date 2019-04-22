@@ -2,6 +2,8 @@ from sklearn.metrics import confusion_matrix, classification_report, balanced_ac
 import matplotlib.pyplot as plt
 from matplotlib import ticker
 import numpy as np
+import pdb
+import pathlib, sys
 
 class Statistics:
       def __init__(self):
@@ -40,7 +42,7 @@ class Statistics:
         :label group model training with the same label. 
         """
         self.process_batchs()
-        model = {"name": name, "label" :label, "measures": {"balanced_accuracy": []} }
+        model = {"name": name, "label": label, "measures": {"balanced_accuracy": []} }
         self.exp[-1]["model_training"].append(model)
 
       def new_epoch(self):
@@ -66,54 +68,58 @@ class Statistics:
         if len(self.y_true) != 0:
             accuracy = balanced_accuracy_score(self.y_pred, self.y_true)
             self.exp[-1]["model_training"][-1]["measures"]["balanced_accuracy"].append(accuracy)
-
-        self.y_true = []
-        self.y_pred = []
+            self.y_true = []
+            self.y_pred = []
 
       def save(self, log_dir):
         self.process_batchs()
+
+        path = log_dir/'_statistics_report_'
+        with open(str(path), 'w') as log_file:
+            sys.stdout = log_file
+            self.print_results()
+        log_file.closed
     
       def print_results(self):
         self.process_batchs()
 
         for experiment in self.exp:
-            print("\n   Expérience" + experiment["name"] + " :\n")
-            print("Paramètres :\n")
+            print("\n   Experiment " + experiment["name"] + " :\n")
+            print("Parameters :\n")
             print(experiment["param"])
-            print("\n")
 
             groups = dict()
 
             for model in experiment["model_training"]:
                 
                 if model["name"] != None:
-                    print("\n   Modèle" + model["name"] + " :\n")
+                    print("\n   Model " + model["name"] + " :\n")
                     for measure_name in model["measures"]:
                         print("\n" + measure_name)
                         print(model["measures"][measure_name])
-                        print("\n")
 
                 if model["label"] != None:
-                    if model["label"] in classes:
+                    if model["label"] in groups:
                         groups[model["label"]].append(model)
                     else:
                         groups[model["label"]] = [model]
 
-            for group_label in groups:
-                print("\nAverage statistics of the " + group_label + "models :\n")
-                for measure_name in groups["group_label"][0]: # every models with same label must have same measures
-                        values = [groups["group_label"]["measure_name"][k] for k in groups["group_label"]["measure_name"]]
+            for group_label, group in groups.items():
+                print("\nAverage statistics of the " + group_label + " models :\n")
+                for measure_name in group[0]["measures"]: # every models with same label must have same measures
+                        values = [model["measures"][measure_name] for model in group]
                         average = None
-                        if type(values[0]) == int:
+                        if type(values[0]) == float:
                             average = sum(values)/len(values)
                         if type(values[0]) == list:
-                            average = [sum(x) / len(x) for x in zip(*values)]
+                            final_values = [l[-1] for l in values]
+                            average = sum(final_values) / len(final_values)
+                            #average = [sum(x) / len(x) for x in zip(*values)]
                         if average != None:
                             print("\n" + measure_name + "\n")
                             print(average)
                             print("\n")
 
-        
         # ~ print(f"Balanced accuracy score: {balanced_accuracy_score(self.y_pred, self.y_true)}")
         # ~ print(classification_report(self.y_pred, self.y_true))
         # ~ print(confusion_matrix(self.y_pred, self.y_true))
