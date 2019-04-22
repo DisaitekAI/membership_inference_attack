@@ -13,7 +13,7 @@ import torch
 import torch.utils.data
 import torch.optim as optim
 from copy import deepcopy
-from utils_modules import weight_init, train
+from utils_modules import weight_init, train, test
 from miscellaneous import progress_bar
 from torch.utils.data import TensorDataset
 
@@ -144,9 +144,11 @@ def get_mia_train_dataset(dataset                  = None,
       
       stats.new_train(label = "shadow-model")
       for epoch in range(20):
-        stats.new_epoch()
         train(model, device, train_loader, optimizer, epoch, verbose = False)
-        test(mia_models[i], device, test_loader, test_stats = stats, verbose = False)
+        if epoch == 19:
+          stats.new_epoch()
+          test(model, device, test_loader, test_stats = stats, verbose = False)
+        
       
       torch.save(model, shadow_model_base_path + "_{}.pt".format(i))
       progress_bar(iteration = i, total = shadow_number - 1)

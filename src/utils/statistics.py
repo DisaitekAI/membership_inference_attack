@@ -5,8 +5,8 @@ import numpy as np
 
 class Statistics:
   def __init__(self):
-    # ~ self.y_pred = []
-    # ~ self.y_true = []
+    self.y_pred = []
+    self.y_true = []
     # ~ self.balanced_accuracy = dict()
     # ~ self.list_experiment = []
     # ~ self.current_experiment_name = ""
@@ -38,8 +38,8 @@ class Statistics:
   def new_batch(self, batch_pred, batch_true):
     # ~ if (self.epoch_count[self.current_experiment_name] == 1):
         # ~ self.batch_count[self.current_experiment_name] += 1
-    # ~ self.y_pred += batch_pred
-    # ~ self.y_true += batch_true
+    self.y_pred += batch_pred
+    self.y_true += batch_true
     # ~ self.balanced_accuracy[self.current_experiment_name].append(balanced_accuracy_score(self.y_pred, self.y_true))
     # ~ self.roc_area[self.current_experiment_name].append(roc_auc_score(self.y_pred, self.y_true))
     pass
@@ -58,11 +58,11 @@ class Statistics:
   def print_results(self): # à appeler à chaque fin d'epoch
     self.process_batchs()
     
-    # ~ print(f"Balanced accuracy score: {balanced_accuracy_score(self.y_pred, self.y_true)}")
-    # ~ print(classification_report(self.y_pred, self.y_true))
-    # ~ print(confusion_matrix(self.y_pred, self.y_true))
-    # ~ self.y_pred = []
-    # ~ self.y_true = []
+    print(f"Balanced accuracy score: {balanced_accuracy_score(self.y_pred, self.y_true)}")
+    print(classification_report(self.y_pred, self.y_true))
+    print(confusion_matrix(self.y_pred, self.y_true))
+    self.y_pred = []
+    self.y_true = []
     # ~ self.end_epoch()
     # ~ print("Balanced accuracy score: {}".format(self.balanced_accuracy[self.current_experiment_name][-1]))
     # ~ print("Confusion matrix:\n {}".format(self.confusion_matrix))

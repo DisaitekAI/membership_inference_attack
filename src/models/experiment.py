@@ -17,6 +17,8 @@ if data_src_path.as_posix() not in sys.path:
 
 from dataset_generator import Dataset_generator
 from mnist_model import Mnist_model
+from purchase_model import Purchase_model
+from cifar10_model import Cifar10_model
 from target import Target
 from shadow_swarm_trainer import get_mia_train_dataset, get_mia_test_dataset
 from mia_model import MIA_model
@@ -133,6 +135,10 @@ def experiment(academic_dataset         = None,
       if custom_target_model is None:
         if academic_dataset == 'mnist':
           model = Mnist_model().to(device)
+        if academic_dataset == 'purchase':
+          model = Purchase_model().to(device)
+        if academic_dataset == 'cifar10':
+          model = Cifar10_model().to(device)
       else:
         model = nn.Sequential(custom_target_model).to(device)
       
@@ -228,3 +234,4 @@ def experiment(academic_dataset         = None,
   
     
     torch.save(mia_models[i], (mia_model_dir/f"class_{i}.pt").as_posix())
+    
