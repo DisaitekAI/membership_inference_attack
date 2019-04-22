@@ -6,7 +6,9 @@
 membership_inference_attack documentation!
 ==============================================
 
-Contents:
+.. ~ Contents:
+.. ~ automodule:: my_project.main
+.. ~     :members:
 
 .. toctree::
    :maxdepth: 2

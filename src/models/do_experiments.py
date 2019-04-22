@@ -34,7 +34,9 @@ def main():
              'shadow_model_base_path' : (models_path/'shadows'/'shadow_cifar10_default').as_posix(),
              'mia_train_dataset_path' : (data_path/'mia_train_dataset_cifar10_default').as_posix(),
              'mia_test_dataset_path'  : (data_path/'mia_test_dataset_cifar10_default').as_posix(),
-             'class_number'           : 10 }
+             'class_number'           : 10,
+             'target_train_epochs'    : 15,
+             'shadow_train_epochs'    : 15}
   
   exp_stats.new_experiment("MIA on default Purchase model (batch norm + dropout regularization)", params)
   experiment(**params, stats = exp_stats)

@@ -25,7 +25,8 @@ def get_mia_train_dataset(dataset                  = None,
                           shadow_model_base_path   = None,
                           mia_dataset_path         = None,
                           class_number             = None,
-                          stats                    = None):
+                          stats                    = None,
+                          shadow_train_epochs      = None):
   """
   create a dataset for the MIA model.
   
@@ -143,9 +144,9 @@ def get_mia_train_dataset(dataset                  = None,
       optimizer = optim.SGD(model.parameters(), **optim_args)
       
       stats.new_train(label = "shadow-model")
-      for epoch in range(20):
+      for epoch in range(shadow_train_epochs):
         train(model, device, train_loader, optimizer, epoch, verbose = False)
-        if epoch == 19:
+        if epoch == shadow_train_epochs - 1:
           stats.new_epoch()
           test(model, device, test_loader, test_stats = stats, verbose = False)
         

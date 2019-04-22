@@ -47,7 +47,10 @@ def experiment(academic_dataset         = None,
                mia_train_dataset_path   = None,
                mia_test_dataset_path    = None,
                class_number             = None,
-               stats                    = None):
+               stats                    = None,
+               target_train_epochs      = 5,
+               shadow_train_epochs      = 5,
+               mia_train_epochs         = 5):
   """
   
   start a membership inference attack experiment
@@ -94,6 +97,12 @@ def experiment(academic_dataset         = None,
   :class_number number of classes in the target model. Required.
     
   :stats pass a Statistics object to record stats for this experiment
+  
+  :target_train_epochs
+  
+  :shadow_train_epochs
+  
+  :mia_train_epochs
   """
   
   if (mia_model_path         is None) or \
@@ -150,7 +159,7 @@ def experiment(academic_dataset         = None,
       
       print('training the target model')
       stats.new_train(name = 'target model')
-      for epoch in range(1, 5):
+      for epoch in range(target_train_epochs):
         stats.new_epoch()
         train(model, device, train_loader, optimizer, epoch)
         test(model, device, test_loader, test_stats = stats)
@@ -174,7 +183,8 @@ def experiment(academic_dataset         = None,
                                              custom_shadow_optim_args,
                                              shadow_model_base_path,
                                              mia_train_dataset_path,
-                                             class_number, stats)
+                                             class_number, stats, 
+                                             shadow_train_epochs)
   
   # TODO(PI) only for mnist right now
   dg = Dataset_generator(method = 'academic', name = academic_dataset, train = True)
@@ -227,7 +237,7 @@ def experiment(academic_dataset         = None,
                                                sampler = balanced_test_dataset, **cuda_args)
     
     stats.new_train(name = f"MIA model {i}", label = "mia-model")                                                                          
-    for epoch in range(1, 5):
+    for epoch in range(mia_train_epochs):
       stats.new_epoch()
       train(mia_models[i], device, train_loader, optimizer, epoch)
       test(mia_models[i], device, test_loader, test_stats = stats)
