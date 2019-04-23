@@ -137,11 +137,11 @@ def get_mia_train_dataset(dataset                  = None,
       test_loader = torch.utils.data.DataLoader(shadow_datasets[j], batch_size = 16, 
                                                 shuffle = True, **cuda_args)
                                                 
-      optim_args = { 'lr' : 0.01, 'momentum' : 0.5 }
+      optim_args = {}
       if custom_shadow_optim_args is not None:
         optim_args = custom_shadow_optim_args
           
-      optimizer = optim.SGD(model.parameters(), **optim_args)
+      optimizer = optim.Adam(model.parameters(), **optim_args)
       
       stats.new_train(label = "shadow-model")
       for epoch in range(shadow_train_epochs):

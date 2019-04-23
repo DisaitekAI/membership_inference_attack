@@ -36,7 +36,19 @@ def main():
              'mia_test_dataset_path'  : (data_path/'mia_test_dataset_cifar10_default').as_posix(),
              'class_number'           : 10,
              'target_train_epochs'    : 15,
-             'shadow_train_epochs'    : 15}
+             'shadow_train_epochs'    : 15,
+             'shadow_number'          : 3,
+             'custom_mia_model'       : OrderedDict([
+               ('dense1'      , nn.Linear(10, 128)),
+               ('relu1'       , nn.ReLU()),
+               ('dropout1'    , nn.Dropout(0.3)),
+               ('dense2'      , nn.Linear(128, 64)),
+               ('relu2'       , nn.ReLU()),
+               ('dropout2'    , nn.Dropout(0.2)),
+               ('dense3'      , nn.Linear(64, 2)),
+               ('relu3'       , nn.ReLU()),
+               ('logsoftmax'  , nn.LogSoftmax(dim=1))
+             ]) }
   
   exp_stats.new_experiment("MIA on default Purchase model (batch norm + dropout regularization)", params)
   experiment(**params, stats = exp_stats)

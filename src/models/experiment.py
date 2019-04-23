@@ -34,7 +34,7 @@ from torch.utils.data.sampler import WeightedRandomSampler
 
 def experiment(academic_dataset         = None, 
                custom_target_model      = None,
-               custom_target_optim_args = None,
+               custom_target_optim_args = {},
                custom_mia_model         = None,
                custom_mia_optim_args    = None,
                use_cuda                 = False,
@@ -42,7 +42,7 @@ def experiment(academic_dataset         = None,
                target_model_path        = None,
                shadow_number            = 100,
                custom_shadow_model      = None,
-               custom_shadow_optim_args = None,
+               custom_shadow_optim_args = {},
                shadow_model_base_path   = None,
                mia_train_dataset_path   = None,
                mia_test_dataset_path    = None,
@@ -151,11 +151,11 @@ def experiment(academic_dataset         = None,
       else:
         model = nn.Sequential(custom_target_model).to(device)
       
-      optim_args = { 'lr' : 0.01, 'momentum' : 0.5 }
+      optim_args = {}
       if custom_target_optim_args is not None:
         optim_args = custom_target_optim_args
         
-      optimizer = optim.SGD(model.parameters(), **optim_args)
+      optimizer = optim.Adam(model.parameters(), **optim_args)
       
       print('training the target model')
       stats.new_train(name = 'target model')
@@ -216,7 +216,7 @@ def experiment(academic_dataset         = None,
     for i in range(class_number):
       mia_models.append(nn.Sequential(custom_mia_model).to(device))
                                              
-  optim_args = { 'lr' : 0.01, 'momentum' : 0.5 }
+  optim_args = {}
   if custom_mia_optim_args is not None:
     optim_args = custom_mia_optim_args
   
@@ -226,15 +226,21 @@ def experiment(academic_dataset         = None,
   
   for i in range(class_number):
     print(f"training the MIA model for class {i}")  
-    optimizer = optim.SGD(mia_models[i].parameters(), **optim_args)
+    optimizer = optim.Adam(mia_models[i].parameters(), **optim_args)
     
-    balanced_train_dataset = BalancedSampler(mia_train_datasets[i])
-    train_loader = torch.utils.data.DataLoader(mia_train_datasets[i], batch_size = 32, 
-                                               sampler = balanced_train_dataset, **cuda_args)    
+    # ~ balanced_train_dataset = BalancedSampler(mia_train_datasets[i])
+    # ~ train_loader = torch.utils.data.DataLoader(mia_train_datasets[i], batch_size = 32, 
+                                               # ~ sampler = balanced_train_dataset, **cuda_args)    
                                                         
-    balanced_test_dataset = BalancedSampler(mia_test_datasets[i])
+    # ~ balanced_test_dataset = BalancedSampler(mia_test_datasets[i])
+    # ~ test_loader  = torch.utils.data.DataLoader(mia_test_datasets[i], batch_size = 1000, 
+                                               # ~ sampler = balanced_test_dataset, **cuda_args)
+                                               
+    train_loader = torch.utils.data.DataLoader(mia_train_datasets[i], batch_size = 32, 
+                                               shuffle = True, **cuda_args)    
+                                                        
     test_loader  = torch.utils.data.DataLoader(mia_test_datasets[i], batch_size = 1000, 
-                                               sampler = balanced_test_dataset, **cuda_args)
+                                               shuffle = True, **cuda_args)
     
     stats.new_train(name = f"MIA model {i}", label = "mia-model")                                                                          
     for epoch in range(mia_train_epochs):
