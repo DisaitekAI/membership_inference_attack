@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib import ticker
 import numpy as np
 import pdb
-import pathlib, sys
+import os, pathlib, sys
 
 class Statistics:
       def __init__(self):
@@ -74,11 +74,26 @@ class Statistics:
       def save(self, log_dir):
         self.process_batchs()
 
-        path = log_dir/'_statistics_report_'
-        with open(str(path), 'w') as log_file:
+        actual_reports = [f for f in log_dir.iterdir() if "Statistics_report_" in f.name]
+        path = log_dir/"Statistics_report_{}".format(len(actual_reports))
+        
+        log_path = path/'Logs'
+        os.makedirs(os.path.dirname(str(log_path)), exist_ok=True)
+        with open(str(log_path), 'w') as log_file:
             sys.stdout = log_file
             self.print_results()
         log_file.closed
+
+        for experiment in self.exp:
+            for model in experiment["model_training"]:
+                if model["name"] != None:
+                    for measure_name, measure_values in model["measures"].items():
+                        plot_path = path/experiment["name"]/model["name"]/measure_name
+                        os.makedirs(os.path.dirname(str(plot_path)), exist_ok=True)
+                        plt.plot(measure_values)
+                        plt.title(measure_name)
+                        plt.savefig(str(plot_path))
+
     
       def print_results(self):
         self.process_batchs()
@@ -116,11 +131,11 @@ class Statistics:
                             average = sum(final_values) / len(final_values)
                             #average = [sum(x) / len(x) for x in zip(*values)]
                         if average != None:
-                            print("\n" + measure_name + "\n")
+                            print("\n" + measure_name + " : ")
                             print(average)
                             print("\n")
 
-        # ~ print(f"Balanced accuracy score: {balanced_accuracy_score(self.y_pred, self.y_true)}")
+        # ~ print("Balanced accuracy score: {balanced_accuracy_score(self.y_pred, self.y_true)}")
         # ~ print(classification_report(self.y_pred, self.y_true))
         # ~ print(confusion_matrix(self.y_pred, self.y_true))
         # ~ self.y_pred = []
@@ -132,20 +147,16 @@ class Statistics:
         # ~ print(self.report)
         
     
-      def plot(self):
-        print(self.batch_count)
-        print(self.epoch_count)
+      def plot(self, val):
         fig, ax1 = plt.subplots(1,1,figsize=(5,3),dpi=100)
-        ax1.plot(self.balanced_accuracy[self.current_experiment_name], )
+        ax1.plot(val)
         #ax1.set_xlim((self.balanced_accuracy[self.current_experiment_name][0],self.balanced_accuracy[self.current_experiment_name][-1]))
-        print(self.balanced_accuracy[self.current_experiment_name])
-        xticklabs = ["{}".format(i) for i in range(self.epoch_count[self.current_experiment_name] * self.batch_count[self.current_experiment_name])]
-        for i in range(self.epoch_count[self.current_experiment_name]):
-            xticklabs[i * self.batch_count[self.current_experiment_name] - 1] = "Epoch {}".format(i) #r'$\textcolor{{red}}{{Epoch {}}}$'
-        xticklabs[-1] = "Epoch {}".format(self.epoch_count[self.current_experiment_name])
-        ax1.set_xticklabels(xticklabs)
-        print(xticklabs)
-        ax1.xaxis.set_minor_locator(MultipleLocator)
+        # xticklabs = ["{}".format(i) for i in range(self.epoch_count[self.current_experiment_name] * self.batch_count[self.current_experiment_name])]
+        # for i in range(self.epoch_count[self.current_experiment_name]):
+        #     xticklabs[i * self.batch_count[self.current_experiment_name] - 1] = "Epoch {}".format(i) #r'$\textcolor{{red}}{{Epoch {}}}$'
+        # xticklabs[-1] = "Epoch {}".format(self.epoch_count[self.current_experiment_name])
+        # ax1.set_xticklabels(xticklabs)
+        #ax1.xaxis.set_minor_locator(MultipleLocator)
         #for i in range(self.epoch_count):
              #, data=(np.array([j for j in range(3)]),np.array([j for j in range(3)])
             #plt.title('Epoch {}'.format(self.iteration))
