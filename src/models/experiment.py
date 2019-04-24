@@ -6,6 +6,7 @@ while home_path.name != 'membership_inference_attack':
   
 data_src_path = home_path/'src'/'data'
 utils_path = home_path/'src'/'utils'
+viz_path = home_path/'src'/'visualization'
   
 # add ../utils/ into the path
 if utils_path.as_posix() not in sys.path:
@@ -14,6 +15,10 @@ if utils_path.as_posix() not in sys.path:
 # add ../data/ into the path
 if data_src_path.as_posix() not in sys.path:
   sys.path.insert(0, data_src_path.as_posix())
+  
+# add ../visualization/ into the path
+if viz_path.as_posix() not in sys.path:
+  sys.path.insert(0, viz_path.as_posix())
 
 from dataset_generator import Dataset_generator
 from mnist_model import Mnist_model
@@ -25,6 +30,7 @@ from mia_model import MIA_model
 from utils_modules import train, test
 from miscellaneous import fixed_random_split, BalancedSampler
 from statistics import Statistics
+from visualize import membership_distributions
 
 import torch
 import torch.nn as nn
@@ -185,8 +191,9 @@ def experiment(academic_dataset         = None,
                                              mia_train_dataset_path,
                                              class_number, stats, 
                                              shadow_train_epochs)
+                                             
+  membership_distributions(mia_train_datasets)
   
-  # TODO(PI) only for mnist right now
   dg = Dataset_generator(method = 'academic', name = academic_dataset, train = True)
   train_set = dg.generate()
   half_len = int(len(train_set) / 2)
@@ -208,6 +215,8 @@ def experiment(academic_dataset         = None,
                                            mia_test_dataset_path,
                                            class_number)  
                                            
+  membership_distributions(mia_test_datasets)
+                                           
   mia_models = list()
   if custom_mia_model is None:
     for i in range(class_number):
@@ -226,26 +235,20 @@ def experiment(academic_dataset         = None,
   
   for i in range(class_number):
     print(f"training the MIA model for class {i}")  
-    optimizer = optim.Adam(mia_models[i].parameters(), **optim_args)
-    
-    # ~ balanced_train_dataset = BalancedSampler(mia_train_datasets[i])
-    # ~ train_loader = torch.utils.data.DataLoader(mia_train_datasets[i], batch_size = 32, 
-                                               # ~ sampler = balanced_train_dataset, **cuda_args)    
+    optimizer = optim.Adam(mia_models[i].parameters(), **optim_args)  
                                                         
-    # ~ balanced_test_dataset = BalancedSampler(mia_test_datasets[i])
-    # ~ test_loader  = torch.utils.data.DataLoader(mia_test_datasets[i], batch_size = 1000, 
-                                               # ~ sampler = balanced_test_dataset, **cuda_args)
-                                               
     train_loader = torch.utils.data.DataLoader(mia_train_datasets[i], batch_size = 32, 
                                                shuffle = True, **cuda_args)    
                                                         
+    balanced_test_dataset = BalancedSampler(mia_test_datasets[i])
     test_loader  = torch.utils.data.DataLoader(mia_test_datasets[i], batch_size = 1000, 
-                                               shuffle = True, **cuda_args)
+                                               sampler = balanced_test_dataset, **cuda_args)
     
+    # ~ import pdb; pdb.set_trace()
     stats.new_train(name = f"MIA model {i}", label = "mia-model")                                                                          
     for epoch in range(mia_train_epochs):
       stats.new_epoch()
-      train(mia_models[i], device, train_loader, optimizer, epoch)
+      train(mia_models[i], device, train_loader, optimizer, epoch, verbose = False)
       test(mia_models[i], device, test_loader, test_stats = stats)
   
     

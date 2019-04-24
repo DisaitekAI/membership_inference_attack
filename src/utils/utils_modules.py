@@ -111,7 +111,11 @@ def train(model, device, train_loader, optimizer, epoch, verbose = True, class_w
     target = batch[-1]
     input_list = [e.to(device) for e in input_list]
     target = target.to(device)
-  
+    
+    # protect batchnormalized models against batch size of 1
+    if len(target) == 1:
+      continue
+      
     optimizer.zero_grad()
     output = model(*input_list)
 

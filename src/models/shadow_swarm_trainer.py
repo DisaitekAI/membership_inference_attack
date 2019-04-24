@@ -14,8 +14,31 @@ import torch.utils.data
 import torch.optim as optim
 from copy import deepcopy
 from utils_modules import weight_init, train, test
-from miscellaneous import progress_bar
+from miscellaneous import progress_bar, fixed_random_split
 from torch.utils.data import TensorDataset
+
+def split_shadow_dataset(dataset, shadow_number):
+  dataset_size = len(dataset)
+  base_dataset_size = dataset_size // shadow_number
+  
+  # set the dataset size for (shadow_number-1) shadows
+  shadow_datasets_sizes = []
+  for i in range(shadow_number - 1):
+    shadow_datasets_sizes.append(base_dataset_size)
+    
+  # last size is the remaining size for the last shadow
+  shadow_datasets_sizes.append(dataset_size - (base_dataset_size * (shadow_number - 1))) 
+  
+  # split the dataset into almost equal sizes
+  shadow_datasets_in = fixed_random_split(dataset, shadow_datasets_sizes)
+  
+  # the out samples are taken from the shadow number i-1 
+  shadow_datasets_out = [shadow_datasets_in[0]]
+  for i in range(1, shadow_number):
+    shadow_datasets_out.append(shadow_datasets_in[i-1])
+  
+  return shadow_datasets_in, shadow_datasets_out
+  
 
 def get_mia_train_dataset(dataset                  = None, 
                           shadow_number            = None, 
@@ -93,19 +116,8 @@ def get_mia_train_dataset(dataset                  = None,
     shadow_dir = pathlib.Path(shadow_model_base_path).parent
     if not shadow_dir.exists():
       shadow_dir.mkdir()
-    
-    base_dataset_size = int(dataset_size / shadow_number)
-  
-    # set the dataset size for (shadow_number-1) shadows
-    shadow_datasets_sizes = []
-    for i in range(shadow_number - 1):
-      shadow_datasets_sizes.append(base_dataset_size)
       
-    # last size is the remaining size for the last shadow
-    shadow_datasets_sizes.append(dataset_size - (base_dataset_size * (shadow_number - 1))) 
-    
-    # split the dataset into almost equal sizes
-    shadow_datasets = torch.utils.data.random_split(dataset, shadow_datasets_sizes)
+    shadow_datasets, _ = split_shadow_dataset(dataset, shadow_number)
     
     for i in range(shadow_number):
       # copy model parameters but we wanna keep the weights randomized
@@ -133,7 +145,7 @@ def get_mia_train_dataset(dataset                  = None,
         j = 1
       
       train_loader = torch.utils.data.DataLoader(shadow_datasets[i], batch_size = 16, 
-                                                shuffle = True, **cuda_args)
+                                                 shuffle = True, **cuda_args)
       test_loader = torch.utils.data.DataLoader(shadow_datasets[j], batch_size = 16, 
                                                 shuffle = True, **cuda_args)
                                                 
@@ -150,56 +162,58 @@ def get_mia_train_dataset(dataset                  = None,
           stats.new_epoch()
           test(model, device, test_loader, test_stats = stats, verbose = False)
         
-      
       torch.save(model, shadow_model_base_path + "_{}.pt".format(i))
       progress_bar(iteration = i, total = shadow_number - 1)
   
   # set all shadow models in evaluation mode
   print("\nbuilding the MIA train datasets")
-  for i in range(shadow_number):
-    shadow_models[i].eval()
-    
+  
+  shadow_datasets_in, shadow_datasets_out = split_shadow_dataset(dataset, shadow_number)
+  
   # build the MIA datasets
-  input_tensor_lists  = list()
-  output_tensor_lists = list()
-  for i in range(class_number):
-    input_tensor_lists.append(list())
-    output_tensor_lists.append(list())
+  input_tensor_lists  = [list() for i in range(class_number)]
+  output_tensor_lists = [list() for i in range(class_number)]
+  
+  for i in range(shadow_number):
+    current_shadow = shadow_models[i]
+    current_shadow.eval()
+    
+    data_in_loader  = torch.utils.data.DataLoader(shadow_datasets_in[i], 
+                       batch_size = 1000, shuffle = True, **cuda_args)
+    
+    with torch.no_grad():
+      for data, targets in data_in_loader:
+        data, targets = data.to(device), targets.to(device)
+        
+        outputs = current_shadow(data)
+        
+        for target, output in zip(targets, outputs):
+          input_tensor_lists[target].append(output)
+          output_tensor_lists[target].append(torch.tensor(1))
+    
+    data_out_loader = torch.utils.data.DataLoader(shadow_datasets_out[i], 
+                       batch_size = 1000, shuffle = True, **cuda_args)
+                       
+    with torch.no_grad():
+      for data, targets in data_out_loader:
+        data, targets = data.to(device), targets.to(device)
+        
+        outputs = current_shadow(data)
+        
+        for target, output in zip(targets, outputs):
+          input_tensor_lists[target].append(output)
+          output_tensor_lists[target].append(torch.tensor(0))
   
   i = 0
-  test_loader = torch.utils.data.DataLoader(dataset, batch_size = 1, shuffle = False, **cuda_args)
-  
-  # TODO(PI) no maximal parallelism right now because of a batch size of 1,
-  # so it's quite long. The problem is we have to keep track of which 
-  # sample belongs to which shadow training dataset. It requires to fix 
-  # this first to enable full parallelism with batch size.
-  base_dataset_size = int(dataset_size / shadow_number)
-  with torch.no_grad():
-    for data, targets in test_loader:
-      data, targets = data.to(device), targets.to(device)
-      
-      shadow_index = int(i / base_dataset_size)
-      i += 1
-      for j in range(shadow_number):
-        mia_output = torch.tensor([0])
-        if j == shadow_index:
-          mia_output = torch.tensor([1])
-          
-        shadow_output = shadow_models[j](data)
-        input_tensor_lists[targets[0]].append(shadow_output)
-        output_tensor_lists[targets[0]].append(mia_output)
-        
-      progress_bar(iteration = i, total = dataset_size)
-  
   mia_datasets = list()
-  for i in range(class_number):
-    mia_datasets.append(TensorDataset(torch.cat(input_tensor_lists[i]),
-                                      torch.cat(output_tensor_lists[i])))
-
-    torch.save(mia_datasets[i], (mia_datasets_dir/f"class_{i}.pt").as_posix())
+  for inputs, labels in zip(input_tensor_lists, output_tensor_lists):
+    mia_datasets.append(TensorDataset(torch.stack(inputs), torch.stack(labels)))
+    torch.save(mia_datasets[-1], (mia_datasets_dir/f"class_{i}.pt").as_posix())
+    i += 1
   
   return mia_datasets
-      
+
+
 def get_mia_test_dataset(train_dataset    = None,
                          test_dataset     = None,
                          target_model     = None,
@@ -235,42 +249,40 @@ def get_mia_test_dataset(train_dataset    = None,
   cuda_args = { 'num_workers' : 1, 'pin_memory' : True } if use_cuda else {}
   device = torch.device('cuda' if use_cuda else 'cpu')  
   
-  input_tensor_lists  = list()
-  output_tensor_lists = list()
-  for i in range(class_number):
-    input_tensor_lists.append(list())
-    output_tensor_lists.append(list())
-  
-  i = 0
-  train_loader = torch.utils.data.DataLoader(train_dataset, batch_size = 1, shuffle = False, **cuda_args)
-  test_loader  = torch.utils.data.DataLoader(test_dataset, batch_size = 1, shuffle = False, **cuda_args) 
-  dataset_size = len(train_dataset) + len(test_dataset)
+  input_tensor_lists  = [list() for i in range(class_number)]
+  output_tensor_lists = [list() for i in range(class_number)]
+
+  data_in_loader  = torch.utils.data.DataLoader(train_dataset, batch_size = 1000, 
+                                                shuffle = True, **cuda_args)
   
   with torch.no_grad():
-    for data, targets in train_loader:
-      i += 1
+    for data, targets in data_in_loader:
       data, targets = data.to(device), targets.to(device)
-
-      output = target_model(data)
-      input_tensor_lists[targets[0]].append(output)
-      output_tensor_lists[targets[0]].append(torch.tensor([1]))
-        
-      progress_bar(iteration = i, total = dataset_size)
       
-    for data, targets in test_loader:
-      i += 1
+      outputs = target_model(data)
+      
+      for target, output in zip(targets, outputs):
+        input_tensor_lists[target].append(output)
+        output_tensor_lists[target].append(torch.tensor(1))
+  
+  data_out_loader = torch.utils.data.DataLoader(test_dataset, batch_size = 1000, 
+                                                shuffle = True, **cuda_args)
+                     
+  with torch.no_grad():
+    for data, targets in data_out_loader:
       data, targets = data.to(device), targets.to(device)
-
-      output = target_model(data)
-      input_tensor_lists[targets[0]].append(output)
-      output_tensor_lists[targets[0]].append(torch.tensor([0]))
-        
-      progress_bar(iteration = i, total = dataset_size)
       
-  mia_datasets = list() 
-  for i in range(class_number):
-    mia_datasets.append(TensorDataset(torch.cat(input_tensor_lists[i]),
-                                      torch.cat(output_tensor_lists[i])))
-    torch.save(mia_datasets[i], (mia_datasets_dir/f"class_{i}.pt").as_posix())
+      outputs = target_model(data)
+      
+      for target, output in zip(targets, outputs):
+        input_tensor_lists[target].append(output)
+        output_tensor_lists[target].append(torch.tensor(0))
+  
+  i = 0
+  mia_datasets = list()
+  for inputs, labels in zip(input_tensor_lists, output_tensor_lists):
+    mia_datasets.append(TensorDataset(torch.stack(inputs), torch.stack(labels)))
+    torch.save(mia_datasets[-1], (mia_datasets_dir/f"class_{i}.pt").as_posix())
+    i += 1
   
   return mia_datasets
