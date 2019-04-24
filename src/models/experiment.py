@@ -38,25 +38,81 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data.sampler import WeightedRandomSampler
 
-def experiment(academic_dataset         = None, 
-               custom_target_model      = None,
-               custom_target_optim_args = {},
-               custom_mia_model         = None,
-               custom_mia_optim_args    = None,
-               use_cuda                 = False,
-               mia_model_path           = None,
-               target_model_path        = None,
-               shadow_number            = 100,
-               custom_shadow_model      = None,
-               custom_shadow_optim_args = {},
-               shadow_model_base_path   = None,
-               mia_train_dataset_path   = None,
-               mia_test_dataset_path    = None,
-               class_number             = None,
-               stats                    = None,
-               target_train_epochs      = 5,
-               shadow_train_epochs      = 5,
-               mia_train_epochs         = 5):
+def cache_handling(no_cache                   = False,
+                   no_mia_train_dataset_cache = False,
+                   no_mia_test_dataset_cache  = False,
+                   no_target_model_cache      = False,
+                   no_mia_models_cache        = False,
+                   no_shadow_cache            = False,
+                   mia_model_path             = None,
+                   target_model_path          = None,
+                   shadow_model_base_path     = None,
+                   mia_train_dataset_path     = None,
+                   mia_test_dataset_path      = None):
+  import shutil
+  
+  if no_cache:
+    no_mia_train_dataset_cache = True
+    no_mia_test_dataset_cache = True
+    no_target_model_cache = True
+    no_mia_models_cache = True
+    no_shadow_cache = True
+    
+  if no_mia_train_dataset_cache:
+    path = pathlib.Path(mia_train_dataset_path)
+    if path.exists():
+      shutil.rmtree(path)
+    
+  if no_mia_test_dataset_cache:
+    path = pathlib.Path(mia_test_dataset_path)
+    if path.exists():
+      shutil.rmtree(path)
+    
+  if no_target_model_cache:
+    path = pathlib.Path(target_model_path)
+    if path.exists():
+      path.unlink()
+    
+  if no_mia_models_cache:
+    path = pathlib.Path(mia_model_path)
+    if path.exists():
+      shutil.rmtree(path)
+    
+  if no_shadow_cache:
+    path = pathlib.Path(shadow_model_base_path)
+    
+    base_dir = path.parent
+    base_file_name = path.name
+  
+    models = list(base_dir.glob(base_file_name + '_*.pt'))
+    for model in models:
+      model.unlink()
+    
+def experiment(academic_dataset           = None, 
+               custom_target_model        = None,
+               custom_target_optim_args   = {},
+               custom_mia_model           = None,
+               custom_mia_optim_args      = None,
+               use_cuda                   = False,
+               mia_model_path             = None,
+               target_model_path          = None,
+               shadow_number              = 100,
+               custom_shadow_model        = None,
+               custom_shadow_optim_args   = {},
+               shadow_model_base_path     = None,
+               mia_train_dataset_path     = None,
+               mia_test_dataset_path      = None,
+               class_number               = None,
+               stats                      = None,
+               target_train_epochs        = 5,
+               shadow_train_epochs        = 5,
+               mia_train_epochs           = 5,
+               no_cache                   = False,
+               no_mia_train_dataset_cache = False,
+               no_mia_test_dataset_cache  = False,
+               no_target_model_cache      = False,
+               no_mia_models_cache        = False,
+               no_shadow_cache            = False):
   """
   
   start a membership inference attack experiment
@@ -117,6 +173,12 @@ def experiment(academic_dataset         = None,
      (shadow_model_base_path is None) or \
      (mia_test_dataset_path  is None): 
     raise ValueError('experiment(): one of the required argument is not set')
+  
+  cache_handling(no_cache, no_mia_train_dataset_cache, 
+                 no_mia_test_dataset_cache, no_target_model_cache, 
+                 no_mia_models_cache, no_shadow_cache, mia_model_path, 
+                 target_model_path, shadow_model_base_path, 
+                 mia_train_dataset_path, mia_test_dataset_path)
   
   device = torch.device('cuda' if use_cuda else 'cpu')
   cuda_args = { 'num_workers' : 1, 'pin_memory' : True } if use_cuda else {}

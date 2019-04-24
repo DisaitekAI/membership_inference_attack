@@ -39,7 +39,7 @@ def remove_experiment_files():
   mia_test_ds_path.rmdir()
   
   base_dir = shadow_base_path.parent
-  base_file_name = base_file.name
+  base_file_name = shadow_base_path.name
 
   old_shadow_models = list(base_dir.glob(base_file_name + '_*.pt'))
   for i in range(len(old_shadow_models)):
