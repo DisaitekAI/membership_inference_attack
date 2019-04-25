@@ -94,3 +94,6 @@ target/
 # models
 /models/
 models/shadows/
+
+#stats reports
+/reports/

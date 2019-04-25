@@ -30,7 +30,6 @@ from mia_model import MIA_model
 from utils_modules import train, test
 from miscellaneous import fixed_random_split, BalancedSampler
 from statistics import Statistics
-from visualize import membership_distributions
 
 import torch
 import torch.nn as nn
@@ -253,8 +252,6 @@ def experiment(academic_dataset           = None,
                                              mia_train_dataset_path,
                                              class_number, stats, 
                                              shadow_train_epochs)
-                                             
-  membership_distributions(mia_train_datasets)
   
   dg = Dataset_generator(method = 'academic', name = academic_dataset, train = True)
   train_set = dg.generate()
@@ -277,7 +274,7 @@ def experiment(academic_dataset           = None,
                                            mia_test_dataset_path,
                                            class_number)  
 
-  membership_distributions(mia_test_datasets)
+  stats.membership_distributions(mia_train_datasets, mia_test_datasets)
                                            
   mia_models = list()
   if custom_mia_model is None:

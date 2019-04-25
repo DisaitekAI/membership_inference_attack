@@ -4,17 +4,26 @@ from matplotlib import ticker
 import numpy as np
 import pdb
 import os, pathlib, sys
+import torch
 
 class Statistics:
   def __init__(self):
-    self.y_pred = []
-    self.y_true = []
-    self.exp    = []
+    self.y_pred    = []
+    self.y_true    = []
+    self.exp       = []
+    self.mia_stats = []
 
   def new_experiment(self, name, parameters):
     self.process_batchs()
-    experiment = {"name": name, "param": parameters, "model_training": []}
+    experiment = { 'name': name, 'param': parameters, 'model_training': [] }
+    
+    mia = { 'mia_train_in_distribution' : [],
+            'mia_train_out_distribution': [],
+            'mia_test_in_distribution'  : [],
+            'mia_test_out_distribution' : [] }
+    
     self.exp.append(experiment)
+    self.mia_stats.append(mia)
 
   def new_train(self, name = None, label = None):
     """
@@ -24,8 +33,8 @@ class Statistics:
     :label group model training with the same label. 
     """
     self.process_batchs()
-    model = {"name": name, "label": label, "measures": {"balanced_accuracy": [], "roc_area": [], "report": ""} }
-    self.exp[-1]["model_training"].append(model)
+    model = { 'name': name, 'label': label, 'measures': {'balanced_accuracy': [], 'roc_area': [], 'report': ''} }
+    self.exp[-1]['model_training'].append(model)
 
   def new_epoch(self):
     self.process_batchs()
@@ -38,11 +47,11 @@ class Statistics:
   def process_batchs(self):
     if len(self.y_true) != 0:
       accuracy = balanced_accuracy_score(self.y_pred, self.y_true)
-      self.exp[-1]["model_training"][-1]["measures"]["balanced_accuracy"].append(accuracy)
+      self.exp[-1]['model_training'][-1]['measures']['balanced_accuracy'].append(accuracy)
       area = roc_auc_score(self.y_pred, self.y_true)
-      self.exp[-1]["model_training"][-1]["measures"]["roc_area"].append(area)
+      self.exp[-1]['model_training'][-1]['measures']['roc_area'].append(area)
       report = classification_report(self.y_pred, self.y_true)
-      self.exp[-1]["model_training"][-1]["measures"]["report"] = report
+      self.exp[-1]['model_training'][-1]['measures']['report'] = report
       self.y_true = []
       self.y_pred = []
 
@@ -93,6 +102,16 @@ class Statistics:
             groups[model["label"]].append(model)
           else:
             groups[model["label"]] = [model]
+            
+      for mia in self.mia_stats:
+        if len(mia['mia_train_in_distribution']):
+          class_number = len(mia['mia_train_in_distribution'])
+          
+          print('\nMembership mean distributions:')
+          for i in range(class_number):
+            print(f"  class {i}")
+            for label, tab in mia.items():
+              print(f"    {label}: {tab[i]}")
 
     for group_label, group in groups.items():
       print("\nAverage statistics of the " + group_label + " models :\n")
@@ -110,4 +129,34 @@ class Statistics:
         if average != None:
           print("\n" + measure_name + " : ")
           print(average)
-  
+          
+  def process_mia_dataset(self, dataset):
+    # iterate through attack model classes
+    s_in  = []
+    s_out = []
+    
+    #iterate through the samples
+    for s_input, s_output in dataset:
+      if s_output == 1:
+        s_in.append(s_input)
+      else:
+        s_out.append(s_input)
+        
+    s_in  = torch.exp(torch.stack(s_in))
+    s_out = torch.exp(torch.stack(s_out))
+    
+    return s_in.mean(dim = 0), s_out.mean(dim = 0)
+    
+  def membership_distributions(self, train_datasets, test_datasets):
+    current_mia_stats = self.mia_stats[-1]
+    
+    for dataset in train_datasets:
+      mean_in, mean_out = self.process_mia_dataset(dataset)
+      current_mia_stats['mia_train_in_distribution'].append(mean_in)
+      current_mia_stats['mia_train_out_distribution'].append(mean_out)
+      
+    for dataset in test_datasets:
+      mean_in, mean_out = self.process_mia_dataset(dataset)
+      current_mia_stats['mia_test_in_distribution'].append(mean_in)
+      current_mia_stats['mia_test_out_distribution'].append(mean_out)
+      
