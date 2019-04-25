@@ -56,7 +56,7 @@ def main():
                ('logsoftmax'  , nn.LogSoftmax(dim=1))
              ]),
              'use_cuda'               : cuda,
-             'no_cache'               : True }
+             'no_cache'               : False }
   
   exp_stats.new_experiment("MIA on default Cifar10 (dropout regularization)", params)
   experiment(**params, stats = exp_stats)

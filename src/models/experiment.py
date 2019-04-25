@@ -186,7 +186,7 @@ def experiment(academic_dataset           = None,
     shadow_batch_size = target_batch_size
   
   device = torch.device('cuda' if use_cuda else 'cpu')
-  cuda_args = { 'num_workers' : 1, 'pin_memory' : True } if use_cuda else {}
+  cuda_args = { 'num_workers' : 1, 'pin_memory' : False } if use_cuda else {}
   
   shadow_swarm_dataset = None
   shadow_dir = pathlib.Path(shadow_model_base_path).parent

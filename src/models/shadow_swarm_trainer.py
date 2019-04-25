@@ -80,7 +80,7 @@ def get_mia_train_dataset(dataset                  = None,
   last_shadow_model_path = pathlib.Path(shadow_model_base_path + "_{}.pt".format(shadow_number - 1))
   more_shadow_model_path = pathlib.Path(shadow_model_base_path + "_{}.pt".format(shadow_number))
   
-  cuda_args = { 'num_workers' : 1, 'pin_memory' : True } if use_cuda else {}
+  cuda_args = { 'num_workers' : 1, 'pin_memory' : False } if use_cuda else {}
   device = torch.device('cuda' if use_cuda else 'cpu')
   dataset_size = len(dataset)
   shadow_models = []
@@ -247,7 +247,7 @@ def get_mia_test_dataset(train_dataset    = None,
       
   print('building the MIA test datasets')
                            
-  cuda_args = { 'num_workers' : 1, 'pin_memory' : True } if use_cuda else {}
+  cuda_args = { 'num_workers' : 1, 'pin_memory' : False } if use_cuda else {}
   device = torch.device('cuda' if use_cuda else 'cpu')  
   
   input_tensor_lists  = [list() for i in range(class_number)]
