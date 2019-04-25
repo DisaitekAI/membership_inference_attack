@@ -78,7 +78,6 @@ def main():
   exp_stats.new_experiment("MIA on default Mnist (batch norm regularization)", params)
   experiment(**params, stats = exp_stats)
     
-  
   # without regularization
   params = { 'academic_dataset'    : 'mnist', 
              'target_model_path'   : (models_path/'mnist_model_exp1.pt').as_posix(),
@@ -134,8 +133,8 @@ def main():
   exp_stats.new_experiment("MIA on Mnist with dropout regulrization", params)
   experiment(**params, stats = exp_stats)
              
-  experiment_stats.print_results()
-  experiment_stats.save(log_dir = reports_path)
+  exp_stats.print_results()
+  exp_stats.save(log_dir = reports_path)
 
 if __name__ == '__main__':
   main()
