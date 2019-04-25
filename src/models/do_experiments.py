@@ -49,7 +49,7 @@ def main():
                ('relu3'       , nn.ReLU()),
                ('logsoftmax'  , nn.LogSoftmax(dim=1))
              ]),
-             'no_cache'               : True }
+             'use_cuda'               : True }
   
   exp_stats.new_experiment("MIA on default Cifar10 (dropout regularization)", params)
   experiment(**params, stats = exp_stats)
