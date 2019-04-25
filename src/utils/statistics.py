@@ -48,8 +48,8 @@ class Statistics:
     if len(self.y_true) != 0:
       accuracy = balanced_accuracy_score(self.y_pred, self.y_true)
       self.exp[-1]['model_training'][-1]['measures']['balanced_accuracy'].append(accuracy)
-      area = roc_auc_score(self.y_pred, self.y_true)
-      self.exp[-1]['model_training'][-1]['measures']['roc_area'].append(area)
+      # ~ area = roc_auc_score(self.y_pred, self.y_true)
+      # ~ self.exp[-1]['model_training'][-1]['measures']['roc_area'].append(area)
       report = classification_report(self.y_pred, self.y_true)
       self.exp[-1]['model_training'][-1]['measures']['report'] = report
       self.y_true = []
