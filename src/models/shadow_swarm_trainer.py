@@ -49,7 +49,8 @@ def get_mia_train_dataset(dataset                  = None,
                           mia_dataset_path         = None,
                           class_number             = None,
                           stats                    = None,
-                          shadow_train_epochs      = None):
+                          shadow_train_epochs      = None,
+                          shadow_batch_size        = None):
   """
   create a dataset for the MIA model.
   
@@ -144,9 +145,9 @@ def get_mia_train_dataset(dataset                  = None,
       if j == i:
         j = 1
       
-      train_loader = torch.utils.data.DataLoader(shadow_datasets[i], batch_size = 16, 
+      train_loader = torch.utils.data.DataLoader(shadow_datasets[i], batch_size = shadow_batch_size, 
                                                  shuffle = True, **cuda_args)
-      test_loader = torch.utils.data.DataLoader(shadow_datasets[j], batch_size = 16, 
+      test_loader = torch.utils.data.DataLoader(shadow_datasets[j], batch_size = 1000, 
                                                 shuffle = True, **cuda_args)
                                                 
       optim_args = {}

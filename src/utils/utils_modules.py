@@ -100,7 +100,7 @@ def weight_init(m):
         init.orthogonal_(param.data)
       else:
         init.normal_(param.data)
-        
+
 def train(model, device, train_loader, optimizer, epoch, verbose = True, class_weights = None):
   """
   train a model
@@ -131,6 +131,8 @@ def train(model, device, train_loader, optimizer, epoch, verbose = True, class_w
       print('  Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
         epoch, batch_idx * size, len(train_loader.dataset),
         100. * batch_idx / len(train_loader), loss.item()))
+        
+      
         
 def test(model, device, test_loader, verbose = True, class_weights = None, test_stats = None):
   """

@@ -111,7 +111,10 @@ def experiment(academic_dataset           = None,
                no_mia_test_dataset_cache  = False,
                no_target_model_cache      = False,
                no_mia_models_cache        = False,
-               no_shadow_cache            = False):
+               no_shadow_cache            = False,
+               target_batch_size          = 64,
+               shadow_batch_size          = None,
+               mia_batch_size             = 32):
   """
   
   start a membership inference attack experiment
@@ -178,6 +181,9 @@ def experiment(academic_dataset           = None,
                  no_mia_models_cache, no_shadow_cache, mia_model_path, 
                  target_model_path, shadow_model_base_path, 
                  mia_train_dataset_path, mia_test_dataset_path)
+                 
+  if shadow_batch_size is None:
+    shadow_batch_size = target_batch_size
   
   device = torch.device('cuda' if use_cuda else 'cpu')
   cuda_args = { 'num_workers' : 1, 'pin_memory' : True } if use_cuda else {}
@@ -201,7 +207,8 @@ def experiment(academic_dataset           = None,
       half_len = int(len(train_set) / 2)
       train_set, shadow_swarm_dataset = fixed_random_split(train_set, [half_len, len(train_set) - half_len])
       
-      train_loader = torch.utils.data.DataLoader(train_set, batch_size = 64, shuffle = True, **cuda_args)
+      train_loader = torch.utils.data.DataLoader(train_set, batch_size = target_batch_size, 
+                                                 shuffle = True, **cuda_args)
       
       dg = Dataset_generator(method = 'academic', name = academic_dataset, train = False)
       test_set = dg.generate()
@@ -251,7 +258,8 @@ def experiment(academic_dataset           = None,
                                              shadow_model_base_path,
                                              mia_train_dataset_path,
                                              class_number, stats, 
-                                             shadow_train_epochs)
+                                             shadow_train_epochs,
+                                             shadow_batch_size)
   
   dg = Dataset_generator(method = 'academic', name = academic_dataset, train = True)
   train_set = dg.generate()
@@ -279,7 +287,7 @@ def experiment(academic_dataset           = None,
   mia_models = list()
   if custom_mia_model is None:
     for i in range(class_number):
-      mia_models.append(MIA_model(input_size = class_number))
+      mia_models.append(MIA_model(input_size = class_number).to(device))
   else:
     for i in range(class_number):
       mia_models.append(nn.Sequential(custom_mia_model).to(device))
@@ -296,7 +304,7 @@ def experiment(academic_dataset           = None,
     print(f"training the MIA model for class {i}")  
     optimizer = optim.Adam(mia_models[i].parameters(), **optim_args)  
                                                         
-    train_loader = torch.utils.data.DataLoader(mia_train_datasets[i], batch_size = 32, 
+    train_loader = torch.utils.data.DataLoader(mia_train_datasets[i], batch_size = mia_batch_size, 
                                                shuffle = True, **cuda_args)    
                                                         
     balanced_test_dataset = BalancedSampler(mia_test_datasets[i])
@@ -306,8 +314,8 @@ def experiment(academic_dataset           = None,
     stats.new_train(name = f"MIA model {i}", label = "mia-model")                                                                          
     for epoch in range(mia_train_epochs):
       stats.new_epoch()
-      train(mia_models[i], device, train_loader, optimizer, epoch, verbose = False)
-      test(mia_models[i], device, test_loader, test_stats = stats)
+      train(mia_models[i].to(device), device, train_loader, optimizer, epoch, verbose = False)
+      test(mia_models[i].to(device), device, test_loader, test_stats = stats)
     
     torch.save(mia_models[i], (mia_model_dir/f"class_{i}.pt").as_posix())
     
