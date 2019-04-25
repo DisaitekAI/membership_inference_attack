@@ -42,7 +42,7 @@ class Statistics:
         :label group model training with the same label. 
         """
         self.process_batchs()
-        model = {"name": name, "label": label, "measures": {"balanced_accuracy": [], "roc_area": []} }
+        model = {"name": name, "label": label, "measures": {"balanced_accuracy": [], "roc_area": [], "report": ""} }
         self.exp[-1]["model_training"].append(model)
 
       def new_epoch(self):
@@ -70,6 +70,8 @@ class Statistics:
             self.exp[-1]["model_training"][-1]["measures"]["balanced_accuracy"].append(accuracy)
             area = roc_auc_score(self.y_pred, self.y_true)
             self.exp[-1]["model_training"][-1]["measures"]["roc_area"].append(area)
+            report = classification_report(self.y_pred, self.y_true)
+            self.exp[-1]["model_training"][-1]["measures"]["report"] = report
             self.y_true = []
             self.y_pred = []
 
@@ -90,11 +92,12 @@ class Statistics:
             for model in experiment["model_training"]:
                 if model["name"] != None:
                     for measure_name, measure_values in model["measures"].items():
-                        plot_path = path/experiment["name"]/model["name"]/measure_name
-                        os.makedirs(os.path.dirname(str(plot_path)), exist_ok=True)
-                        plt.plot(measure_values)
-                        plt.title(measure_name)
-                        plt.savefig(str(plot_path))
+                        if type(measure_values) == list:
+                            plot_path = path/experiment["name"]/model["name"]/measure_name
+                            os.makedirs(os.path.dirname(str(plot_path)), exist_ok=True)
+                            plt.plot(measure_values)
+                            plt.title(measure_name)
+                            plt.savefig(str(plot_path))
 
     
       def print_results(self):
