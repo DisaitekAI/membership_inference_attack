@@ -42,7 +42,7 @@ class Statistics:
         :label group model training with the same label. 
         """
         self.process_batchs()
-        model = {"name": name, "label": label, "measures": {"balanced_accuracy": []} }
+        model = {"name": name, "label": label, "measures": {"balanced_accuracy": [], "roc_area": []} }
         self.exp[-1]["model_training"].append(model)
 
       def new_epoch(self):
@@ -68,6 +68,8 @@ class Statistics:
         if len(self.y_true) != 0:
             accuracy = balanced_accuracy_score(self.y_pred, self.y_true)
             self.exp[-1]["model_training"][-1]["measures"]["balanced_accuracy"].append(accuracy)
+            area = roc_auc_score(self.y_pred, self.y_true)
+            self.exp[-1]["model_training"][-1]["measures"]["roc_area"].append(area)
             self.y_true = []
             self.y_pred = []
 
@@ -99,7 +101,7 @@ class Statistics:
         self.process_batchs()
 
         for experiment in self.exp:
-            print("\n   Experiment " + experiment["name"] + " :\n")
+            print("   Experiment " + experiment["name"] + " :\n")
             print("Parameters :\n")
             print(experiment["param"])
 
@@ -133,7 +135,6 @@ class Statistics:
                         if average != None:
                             print("\n" + measure_name + " : ")
                             print(average)
-                            print("\n")
 
         # ~ print("Balanced accuracy score: {balanced_accuracy_score(self.y_pred, self.y_true)}")
         # ~ print(classification_report(self.y_pred, self.y_true))
