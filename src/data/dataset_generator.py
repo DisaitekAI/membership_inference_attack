@@ -18,21 +18,25 @@ import torch
 from torch.utils.data import TensorDataset
 
 class Dataset_generator:
-  """
-  Generate datasets for the offline target model and for the 
-  Shadow_swarm_trainer.
+  """generates datasets for the offline target model or the online 
+  target model.
   
-  examples
-    get the mnist dataset
+  Example:
+    get the mnist dataset::
+    
       dg = Dataset_generator(method = "academic", name = "mnist", train = True)
-      dataset = dg.generate() # use it as a torch.utils.data.Dataset
+      dataset = dg.generate() # returns a torch.utils.data.Dataset
+  
   """
   def __init__(self, method = 'academic', train = True, name = None):
     """
-    :method "academic"
-    :name "mnist". The name of an academic dataset
-    :train boolean. Get the trainning set or the testing set from an 
-      academic dataset.
+    Args:
+      method (string): "academic".
+      
+      name (string): name of the academic dataset to use. Currently implemented values "mnist", "cifar10", "purchase".
+      
+      train (bool): whether to get the train or test academic dataset.
+      
     """
     self.method = method
     self.train  = train
@@ -127,13 +131,14 @@ class Dataset_generator:
         return torch.load(test_path.as_posix())
 
   def generate(self):
-    """
-    Generate the dataset with the arguments given at initialization.
+    """Generate the dataset with the arguments given at initialization.
      
     Academic datasets are transformed using their own norm and std 
     values.
     
-    Always return a torch.utils.data.Dataset object
+    Returns:
+      dataset (torch Dataset): the requested dataset.
+      
     """
     if self.method == 'academic':
       if self.name == 'mnist':
