@@ -3,6 +3,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class Purchase_model(nn.Module):
+  """Default MLP for the Kaggle Purchase dataset.
+  Original challenge https://www.kaggle.com/c/acquire-valued-shoppers-challenge/
+  Feature set coming from https://github.com/auduno/Kaggle-Acquire-Valued-Shoppers-Challenge
+  """
   def __init__(self):
     super(Purchase_model, self).__init__()
     

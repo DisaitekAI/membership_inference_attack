@@ -3,8 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class Mnist_model(nn.Module):
-  """
-  Basic CNN for the MNIST dataset
+  """Default CNN for the MNIST dataset
   """
   def __init__(self):
     super(Mnist_model, self).__init__()
