@@ -27,13 +27,12 @@ def progress_bar (iteration, total, prefix = '', suffix = '', decimals = 1, leng
     print()
   
 def fixed_random_split(dataset, lengths):
-  """
-  Randomly split a dataset into non-overlapping new datasets of given 
+  """Randomly split a dataset into non-overlapping new datasets of given 
   lengths. The seed of this random function is always 42.
 
-  Arguments:
-      dataset (Dataset): Dataset to be split
-      lengths (sequence): lengths of splits to be produced
+  Args:
+    dataset (torch Dataset): dataset to be split.
+    lengths (list(int)): lengths of splits to be produced
   """
   if sum(lengths) != len(dataset):
     raise ValueError("Sum of input lengths does not equal the length of the input dataset!")
@@ -45,6 +44,8 @@ def fixed_random_split(dataset, lengths):
   return [Subset(dataset, indices[offset - length:offset]) for offset, length in zip(_accumulate(lengths), lengths)]
   
 class BalancedSampler(torch.utils.data.sampler.Sampler):
+  """Sampler that draws around the same amount of sample for each class.
+  """
   def __init__(self, dataset, oversampling = False):
     self.indices     = list(range(len(dataset)))
     dataset_labels   = [y.item() for _, y in dataset] 
