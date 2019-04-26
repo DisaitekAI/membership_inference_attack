@@ -51,17 +51,38 @@ def get_mia_train_dataset(dataset                  = None,
                           stats                    = None,
                           shadow_train_epochs      = None,
                           shadow_batch_size        = None):
-  """
-  create a dataset for the MIA model.
+  """get_mia_train_dataset() create training datasets for the MIA models. 
   
-  :dataset 
-  :shadow_number 
-  :shadow_model
-  :use_cuda
-  :custom_shadow_optim_args
-  :shadow_model_base_path
-  :mia_dataset_path
-  :class_number
+  First it trains shadow models, which are usually copies of the target 
+  model, then samples of the provided dataset are used to generate MIA 
+  in and out sample by using the trained shadow models.
+  
+  Args:
+    dataset (torch Dataset): a dataset for training the shadow models and generate in and out samples.                 
+    
+    shadow_number (int): the number of shadow models.          
+    
+    shadow_model (torch Module): the shadow model to use.            
+    
+    use_cuda (bool): whether to use cuda or not. False by default.                
+    
+    custom_shadow_optim_args (Dict): custom options for the Adam optimizer.
+    
+    shadow_model_base_path (string/Path): path of the shadow model dir. 
+    
+    mia_dataset_path (string/Path): path of the MIA training dataset dir.      
+    
+    class_number (int): number of classes in the problem solved by the target model.           
+    
+    stats (Statistics): statistics object that records the data of the shadow training.                   
+    
+    shadow_train_epochs (int): number of epoch for the shadow training.     
+    
+    shadow_batch_size (int): batch size of the shadow training.
+    
+  Returns:
+    list(TensorDataset): a list of datasets to train the MIA model.
+          
   """
   
   if (dataset                is None) or \
@@ -221,6 +242,28 @@ def get_mia_test_dataset(train_dataset    = None,
                          use_cuda         = False,
                          mia_dataset_path = None,
                          class_number     = None):
+  """get_mia_test_dataset() generate test datasets for the MIA models.
+  
+  It executes, with the target model, samples coming from the train and 
+  test dataset of the target model. 
+  
+  Args:
+    train_dataset (torch Dataset): dataset used to train the target model.   
+    
+    test_dataset (torch Dataset): dataset that was not used to train the target model.   
+    
+    target_model (torch Module): the trained target model.    
+    
+    use_cuda (bool): whether to use cuda or not. False by default.       
+    
+    mia_dataset_path (string/Path): path for saving the MIA test datasets.
+    
+    class_number (int): number of classes in the problem solved by the target model.  
+  
+  Returns:
+    list(TensorDataset): a list of datasets to test the MIA model.
+  
+  """
   if (mia_dataset_path is None) or (class_number is None):
     raise ValueError("get_mia_test_dataset: one of the required "
                      "argument is not set")
