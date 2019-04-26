@@ -48,6 +48,46 @@ def cache_handling(no_cache                   = False,
                    shadow_model_base_path     = None,
                    mia_train_dataset_path     = None,
                    mia_test_dataset_path      = None):
+  """cache_handling() control the cache usage of the MIA experiment
+  
+  The following elements are cached:
+    * The trained target model (if the target model is offline)
+    * The trained shadow models
+    * The MIA training dataset built by the shadow models
+    * The MIA test dataset built by the target model
+    * The Trained MIA attack models
+    
+  Except for the trained MIA attack models, if the corresponding file 
+  is detected, the default experiment behavior is to load its data. 
+  Therefore this fonction control the removal of the cached data in 
+  order to redo some parts of the experiment with different 
+  hyperameters. All the parameters should be direct copy of the one 
+  passed by experiment().
+  
+  Args:
+    no_cache (bool): set to True to remove all cached data. False by default.
+    
+    no_mia_train_dataset_cache (bool): set to True to remove the cached MIA training dataset. False by default.
+    
+    no_mia_test_dataset_cache (bool): set to True to remove the cached MIA test dataset. False by default.
+    
+    no_target_model_cache (bool): set to True to remove the cached target model. False by default.
+        
+    no_mia_models_cache (bool): set to True to remove the cached target models. False by default.
+          
+    no_shadow_cache (bool): set to True to remove the cached shadow models. False by default.       
+        
+    mia_model_path (string/Path): path of the MIA models save dir.      
+         
+    target_model_path (string/Path): path of the target model save file.    
+         
+    shadow_model_base_path (string/Path): path of the shadow models save dir.     
+    
+    mia_train_dataset_path (string/Path): path of the MIA training datasets save dir. 
+      
+    mia_test_dataset_path (string/Path): path of the MIA test datasets save dir.    
+    
+  """
   import shutil
   
   if no_cache:
@@ -115,58 +155,65 @@ def experiment(academic_dataset           = None,
                target_batch_size          = 64,
                shadow_batch_size          = None,
                mia_batch_size             = 32):
-  """
+  """ experiment() starts a membership inference attack experiment
   
-  start a membership inference attack experiment
-  
-  :academic_dataset name of the academic dataset used. None by default.
-  
-  :custom_target_model an OrderedDict description of the 
-    target model. None by default.
+  Args:
+    academic_dataset (string): name of the academic dataset to use. Currently datasets implemented are "cifar10", "purchase", "mnist".
     
-  :custom_target_optim_args dict of custom values for lr and 
-    momentum. None by default.
+    custom_target_model (OrderedDict): a custom target model to use instead of the one provided by default. Use an OrderedDict to describe the neural network architecture.
     
-  :custom_mia_model an OrderedDict description of the mia model. 
-    None by default.
+    custom_target_optim_args (Dict): arguments of the Adam optimizer to use instead of the default parameters.
     
-  :custom_mia_optim_args dict of custom values for lr and 
-    momentum. None by default.
+    custom_mia_model (OrderedDict): a custom mia attack model to use instead of the one provided by default. Use an OrderedDict to describe the neural network architecture.
     
-  :target_model_path  required if the target is offline
-   
-  :mia_model_path required
-  
-  :use_cuda False by default
-  
-  :shadow_number 100 by default
-  
-  :shadow_model_base_path base file path for saving the shadow models. 
-    File names will be incremented with the shadow index. Required.
-  
-  :custom_shadow_model an OrderedDict description of the 
-    shadow model. None by default. If the target is online, providing 
-    the model is required. If the target is offline by default the 
-    shadow model is a copy of the target model.
-  
-  :custom_shadow_optim_args dict of custom values for lr and 
-    momentum. None by default.
+    custom_mia_optim_args (Dict): arguments of the Adam optimizer to use instead of the default parameters.
     
-  :mia_train_dataset_path base path for saving or loading the mia dataset 
-    used for training. Required.
+    use_cuda (bool): weither to use cuda or not. False by default. 
     
-  :mia_test_dataset_path base path for saving or loading the mia dataset 
-    used for testing. Required.
+    mia_model_path (string/Path): path of the MIA models save dir.      
+         
+    target_model_path (string/Path): path of the target model save file.
     
-  :class_number number of classes in the target model. Required.
+    shadow_number (int): number of shadow models to use. 100 by default.
     
-  :stats pass a Statistics object to record stats for this experiment
+    custom_shadow_model (OrderedDict): a custom shadow model to use instead of the copy of the target model. Use an OrderedDict to describe the neural network architecture.
+    
+    custom_shadow_optim_args (Dict): arguments of the Adam optimizer to use instead of the default parameters.
+    
+    shadow_model_base_path (string/Path): path of the shadow models save dir.     
+    
+    mia_train_dataset_path (string/Path): path of the MIA training datasets save dir. 
+      
+    mia_test_dataset_path (string/Path): path of the MIA test datasets save dir.
+    
+    class_number (int): number class in the target problem. For instance, 10 for Mnist. 
+    
+    stats (Statistics): the statistics object used to record the experiment data.
+    
+    target_train_epochs (int): number epoch of the train function. 5 by default.
+    
+    shadow_train_epochs (int): number epoch of the train function. 5 by default.
+    
+    mia_train_epochs (int): number epoch of the train function. 5 by default.
+    
+    no_cache (bool): set to True to remove all cached data. False by default.
+    
+    no_mia_train_dataset_cache (bool): set to True to remove the cached MIA training dataset. False by default.
+    
+    no_mia_test_dataset_cache (bool): set to True to remove the cached MIA test dataset. False by default.
+    
+    no_target_model_cache (bool): set to True to remove the cached target model. False by default.
+        
+    no_mia_models_cache (bool): set to True to remove the cached target models. False by default.
+          
+    no_shadow_cache (bool): set to True to remove the cached shadow models. False by default. 
+    
+    target_batch_size (int): size of the target training batches. 64 by default.
+    
+    shadow_batch_size (int): size of the shadow training batches. Same value as target_batch_size by default.
+    
+    mia_batch_size (int): size of the mia attack model training batches. 32 by default. 
   
-  :target_train_epochs
-  
-  :shadow_train_epochs
-  
-  :mia_train_epochs
   """
   
   if (mia_model_path         is None) or \
