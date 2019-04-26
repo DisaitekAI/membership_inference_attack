@@ -31,6 +31,14 @@ class Target:
         raise ValueError('Target: the model path is invalid')
       
   def __call__(self, vinput):
+    """() execute a input sample with the target model.
+    
+    Args:
+      vinput (torch Tensor): input for the model.
+      
+    Returns:
+      output (torch Tensor): output of the model.
+    """
     if self.offline:
       return self.offline_model(vinput).to(self.device)
       
