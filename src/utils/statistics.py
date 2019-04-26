@@ -7,6 +7,9 @@ import os, pathlib, sys
 import torch
 
 class Statistics:
+  """class used to records statistical data for all experiments.
+  """
+  
   def __init__(self):
     self.y_pred    = []
     self.y_true    = []
@@ -14,6 +17,15 @@ class Statistics:
     self.mia_stats = []
 
   def new_experiment(self, name, parameters):
+    """declares that a new experiment will be executed.
+    
+    Args:
+      name (string): name of the experiment
+      
+      parameters (Dict): all parameters of the experiment
+      
+    """
+    
     self.process_batchs()
     experiment = { 'name': name, 'param': parameters, 'model_training': [] }
     
@@ -26,25 +38,37 @@ class Statistics:
     self.mia_stats.append(mia)
 
   def new_train(self, name = None, label = None):
-    """
-    define a new model training.
-
-    :name name of the training. 
-    :label group model training with the same label. 
+    """declares that the training of a new model will be executed.
+    
+    Args:
+      name (string): name of the model. If None the results of the model testing will not be printed individualy.
+    
+      label (string): label of the group to which belongs the model. Special processing are done with models of the same group (averaged accuracy for instance). 
     """
     self.process_batchs()
     model = { 'name': name, 'label': label, 'measures': {'balanced_accuracy': [], 'roc_area': [], 'report': ''} }
     self.exp[-1]['model_training'].append(model)
 
   def new_epoch(self):
+    """declares that a new epoch of a training cycle will be executed.
+    """
     self.process_batchs()
     
         
   def new_batch(self, batch_pred, batch_true):
+    """collects the results of a train epoch on the test dataset.
+    
+    Args:
+      batch_pred (list(label)): list of the labels predicted by the ML for the current batch.
+      
+      batch_true (list(label)): list of the true labels for the current batch.
+    """
     self.y_pred.extend(batch_pred)
     self.y_true.extend(batch_true)
 
   def process_batchs(self):
+    """process the data for all saved batches.
+    """
     if len(self.y_true) != 0:
       accuracy = balanced_accuracy_score(self.y_pred, self.y_true)
       self.exp[-1]['model_training'][-1]['measures']['balanced_accuracy'].append(accuracy)
@@ -56,6 +80,8 @@ class Statistics:
       self.y_pred = []
 
   def save(self, log_dir):
+    """save the results of all experiements in log_dir
+    """
     self.process_batchs()
 
     actual_reports = [f for f in log_dir.iterdir() if "Statistics_report_" in f.name]
@@ -80,6 +106,8 @@ class Statistics:
               plt.savefig(str(plot_path))
 
   def print_results(self):
+    """print the results of all experiments
+    """
     self.process_batchs()
 
     for experiment in self.exp:
@@ -136,6 +164,15 @@ class Statistics:
           print(average)
           
   def process_mia_dataset(self, dataset):
+    """process the mean distribution of input samples from a MIA dataset
+    
+    Args:
+      dataset (torch Dataset): MIA train or test dataset
+      
+    Returns
+      (mean_in_sample (torch Tensor), mean_out_sample (torch Tensor))
+      
+    """
     # iterate through attack model classes
     s_in  = []
     s_out = []
@@ -153,6 +190,8 @@ class Statistics:
     return s_in.mean(dim = 0), s_out.mean(dim = 0)
     
   def membership_distributions(self, train_datasets, test_datasets):
+    """process the mean distribution of all train and test MIA datasets 
+    """
     current_mia_stats = self.mia_stats[-1]
     
     for dataset in train_datasets:
