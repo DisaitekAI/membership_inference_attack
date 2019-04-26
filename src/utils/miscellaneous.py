@@ -25,19 +25,6 @@ def progress_bar (iteration, total, prefix = '', suffix = '', decimals = 1, leng
   # new line on complete
   if iteration == total: 
     print()
-
-def max_label(data_loader):
-  """
-  Super dirty function to get the maximum label from any dataset.
-  Use it when there is no other choice.
-  """
-  m = 0
-  for _, targets in data_loader:
-    for target in targets:
-      if target > m:
-        m = target
-        
-  return m.item()
   
 def fixed_random_split(dataset, lengths):
   """
