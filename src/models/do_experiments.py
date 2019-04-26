@@ -33,116 +33,118 @@ def main():
   
   exp_stats = Statistics()
   
-  # default regularized (dropout) cifar10 model
-  params = { 'academic_dataset'       : 'cifar10', 
-             'target_model_path'      : (models_path/'cifar10_model_default.pt').as_posix(),
-             'mia_model_path'         : (models_path/'mia_model_cifar10_default').as_posix(),
-             'shadow_model_base_path' : (models_path/'shadows'/'shadow_cifar10_default').as_posix(),
-             'mia_train_dataset_path' : (data_path/'mia_train_dataset_cifar10_default').as_posix(),
-             'mia_test_dataset_path'  : (data_path/'mia_test_dataset_cifar10_default').as_posix(),
-             'class_number'           : 10,
-             'target_train_epochs'    : 15,
-             'shadow_train_epochs'    : 15,
-             'shadow_number'          : 20,
-             'custom_mia_model'       : OrderedDict([
-               ('dense1'      , nn.Linear(10, 128)),
-               ('relu1'       , nn.ReLU()),
-               ('dropout1'    , nn.Dropout(0.3)),
-               ('dense2'      , nn.Linear(128, 64)),
-               ('relu2'       , nn.ReLU()),
-               ('dropout2'    , nn.Dropout(0.2)),
-               ('dense3'      , nn.Linear(64, 2)),
-               ('relu3'       , nn.ReLU()),
-               ('logsoftmax'  , nn.LogSoftmax(dim=1))
-             ]),
-             'use_cuda'               : cuda,
-             'no_cache'               : False }
+  for i in range(2, 200):
+    params = { 'academic_dataset'       : 'cifar10', 
+               'target_model_path'      : (models_path/'cifar10_model_default.pt').as_posix(),
+               'mia_model_path'         : (models_path/'mia_model_cifar10_default').as_posix(),
+               'shadow_model_base_path' : (models_path/'shadows'/'shadow_cifar10_default').as_posix(),
+               'mia_train_dataset_path' : (data_path/'mia_train_dataset_cifar10_default').as_posix(),
+               'mia_test_dataset_path'  : (data_path/'mia_test_dataset_cifar10_default').as_posix(),
+               'class_number'           : 10,
+               'target_train_epochs'    : 15,
+               'shadow_train_epochs'    : 15,
+               'shadow_number'          : i,
+               'custom_mia_model'       : OrderedDict([
+                 ('dense1'      , nn.Linear(10, 128)),
+                 ('relu1'       , nn.ReLU()),
+                 ('dropout1'    , nn.Dropout(0.3)),
+                 ('dense2'      , nn.Linear(128, 64)),
+                 ('relu2'       , nn.ReLU()),
+                 ('dropout2'    , nn.Dropout(0.2)),
+                 ('dense3'      , nn.Linear(64, 2)),
+                 ('relu3'       , nn.ReLU()),
+                 ('logsoftmax'  , nn.LogSoftmax(dim=1))
+               ]),
+               'use_cuda'                   : cuda,
+               'no_mia_train_dataset_cache' : True,
+               'no_shadow_cache'            : True,
+               'no_mia_models_cache'        : True }
   
-  exp_stats.new_experiment("MIA on default Cifar10 (dropout regularization)", params)
-  experiment(**params, stats = exp_stats)
+    exp_stats.new_experiment(f"Cifar10 MIA: shadow number {i}", params)
+    experiment(**params, stats = exp_stats)
   
-  # default regularized purchase model
-  params = { 'academic_dataset'       : 'purchase', 
-             'target_model_path'      : (models_path/'purchase_model_default.pt').as_posix(),
-             'mia_model_path'         : (models_path/'mia_model_purchase_default').as_posix(),
-             'shadow_model_base_path' : (models_path/'shadows'/'shadow_purchase_default').as_posix(),
-             'mia_train_dataset_path' : (data_path/'mia_train_dataset_purchase_default').as_posix(),
-             'mia_test_dataset_path'  : (data_path/'mia_test_dataset_purchase_default').as_posix(),
-             'class_number'           : 2,
-             'use_cuda'               : cuda }
+  # ~ # default regularized purchase model
+  # ~ params = { 'academic_dataset'       : 'purchase', 
+             # ~ 'target_model_path'      : (models_path/'purchase_model_default.pt').as_posix(),
+             # ~ 'mia_model_path'         : (models_path/'mia_model_purchase_default').as_posix(),
+             # ~ 'shadow_model_base_path' : (models_path/'shadows'/'shadow_purchase_default').as_posix(),
+             # ~ 'mia_train_dataset_path' : (data_path/'mia_train_dataset_purchase_default').as_posix(),
+             # ~ 'mia_test_dataset_path'  : (data_path/'mia_test_dataset_purchase_default').as_posix(),
+             # ~ 'class_number'           : 2,
+             # ~ 'use_cuda'               : cuda }
   
-  exp_stats.new_experiment("MIA on default Purchase model (batch norm + dropout regularization)", params)
-  experiment(**params, stats = exp_stats)
+  # ~ exp_stats.new_experiment("MIA on default Purchase model (batch norm + dropout regularization)", params)
+  # ~ experiment(**params, stats = exp_stats)
   
-  # default regularized mnist model
-  params = { 'academic_dataset'       : 'mnist', 
-             'target_model_path'      : (models_path/'mnist_model_default.pt').as_posix(),
-             'mia_model_path'         : (models_path/'mia_model_default').as_posix(),
-             'shadow_model_base_path' : (models_path/'shadows'/'shadow_default').as_posix(),
-             'mia_train_dataset_path' : (data_path/'mia_train_dataset_default').as_posix(),
-             'mia_test_dataset_path'  : (data_path/'mia_test_dataset_default').as_posix(),
-             'class_number'           : 10,
-             'use_cuda'               : cuda }
+  # ~ # default regularized mnist model
+  # ~ params = { 'academic_dataset'       : 'mnist', 
+             # ~ 'target_model_path'      : (models_path/'mnist_model_default.pt').as_posix(),
+             # ~ 'mia_model_path'         : (models_path/'mia_model_default').as_posix(),
+             # ~ 'shadow_model_base_path' : (models_path/'shadows'/'shadow_default').as_posix(),
+             # ~ 'mia_train_dataset_path' : (data_path/'mia_train_dataset_default').as_posix(),
+             # ~ 'mia_test_dataset_path'  : (data_path/'mia_test_dataset_default').as_posix(),
+             # ~ 'class_number'           : 10,
+             # ~ 'use_cuda'               : cuda }
   
-  exp_stats.new_experiment("MIA on default Mnist (batch norm regularization)", params)
-  experiment(**params, stats = exp_stats)
+  # ~ exp_stats.new_experiment("MIA on default Mnist (batch norm regularization)", params)
+  # ~ experiment(**params, stats = exp_stats)
     
-  # without regularization
-  params = { 'academic_dataset'    : 'mnist', 
-             'target_model_path'   : (models_path/'mnist_model_exp1.pt').as_posix(),
-             'mia_model_path'      : (models_path/'mia_model_exp1').as_posix(),
-             'custom_target_model' : OrderedDict([
-               ('conv1'       , nn.Conv2d(1, 10, 3, 1)),
-               ('relu1'       , nn.ReLU()),
-               ('maxpool1'    , nn.MaxPool2d(2, 2)),
-               ('conv2'       , nn.Conv2d(10, 10, 3, 1)),
-               ('relu2'       , nn.ReLU()),
-               ('maxpool2'    , nn.MaxPool2d(2, 2)),
-               ('to1d'        , Flatten()),
-               ('dense1'      , nn.Linear(5*5*10, 500)),
-               ('tanh'        , nn.Tanh()),
-               ('dense2'      , nn.Linear(500, 10)),
-               ('logsoftmax'  , nn.LogSoftmax(dim=1))
-             ]),
-             'shadow_number'            : 50,
-             'shadow_model_base_path'   : (models_path/'shadows'/'shadow_exp1').as_posix(),
-             'mia_train_dataset_path'   : (data_path/'mia_train_dataset_exp1').as_posix(),
-             'mia_test_dataset_path'    : (data_path/'mia_test_dataset_exp1').as_posix(),
-             'class_number'             : 10,
-             'use_cuda'                 : cuda }
+  # ~ # without regularization
+  # ~ params = { 'academic_dataset'    : 'mnist', 
+             # ~ 'target_model_path'   : (models_path/'mnist_model_exp1.pt').as_posix(),
+             # ~ 'mia_model_path'      : (models_path/'mia_model_exp1').as_posix(),
+             # ~ 'custom_target_model' : OrderedDict([
+               # ~ ('conv1'       , nn.Conv2d(1, 10, 3, 1)),
+               # ~ ('relu1'       , nn.ReLU()),
+               # ~ ('maxpool1'    , nn.MaxPool2d(2, 2)),
+               # ~ ('conv2'       , nn.Conv2d(10, 10, 3, 1)),
+               # ~ ('relu2'       , nn.ReLU()),
+               # ~ ('maxpool2'    , nn.MaxPool2d(2, 2)),
+               # ~ ('to1d'        , Flatten()),
+               # ~ ('dense1'      , nn.Linear(5*5*10, 500)),
+               # ~ ('tanh'        , nn.Tanh()),
+               # ~ ('dense2'      , nn.Linear(500, 10)),
+               # ~ ('logsoftmax'  , nn.LogSoftmax(dim=1))
+             # ~ ]),
+             # ~ 'shadow_number'            : 50,
+             # ~ 'shadow_model_base_path'   : (models_path/'shadows'/'shadow_exp1').as_posix(),
+             # ~ 'mia_train_dataset_path'   : (data_path/'mia_train_dataset_exp1').as_posix(),
+             # ~ 'mia_test_dataset_path'    : (data_path/'mia_test_dataset_exp1').as_posix(),
+             # ~ 'class_number'             : 10,
+             # ~ 'use_cuda'                 : cuda }
   
-  exp_stats.new_experiment("MIA on Mnist with no regularization", params)
-  experiment(**params, stats = exp_stats)
+  # ~ exp_stats.new_experiment("MIA on Mnist with no regularization", params)
+  # ~ experiment(**params, stats = exp_stats)
   
-  # with dropout regularization
-  params = { 'academic_dataset'    : 'mnist', 
-             'target_model_path'   : (models_path/'mnist_model_exp2.pt').as_posix(),
-             'mia_model_path'      : (models_path/'mia_model_exp2').as_posix(),
-             'custom_target_model' : OrderedDict([
-               ('conv1'       , nn.Conv2d(1, 10, 3, 1)),
-               ('relu1'       , nn.ReLU()),
-               ('maxpool1'    , nn.MaxPool2d(2, 2)),
-               ('dropout1'    , nn.Dropout(p = 0.5)),
-               ('conv2'       , nn.Conv2d(10, 10, 3, 1)),
-               ('relu2'       , nn.ReLU()),
-               ('maxpool2'    , nn.MaxPool2d(2, 2)),
-               ('dropout2'    , nn.Dropout(p = 0.5)),
-               ('to1d'        , Flatten()),
-               ('dense1'      , nn.Linear(5*5*10, 500)),
-               ('tanh'        , nn.Tanh()),
-               ('dropout3'    , nn.Dropout(p = 0.5)),
-               ('dense2'      , nn.Linear(500, 10)),
-               ('logsoftmax'  , nn.LogSoftmax(dim=1))
-             ]),
-             'shadow_number'            : 50,
-             'shadow_model_base_path'   : (models_path/'shadows'/'shadow_exp2').as_posix(),
-             'mia_train_dataset_path'   : (data_path/'mia_train_dataset_exp2').as_posix(),
-             'mia_test_dataset_path'    : (data_path/'mia_test_dataset_exp2').as_posix(),
-             'class_number'             : 10,
-             'use_cuda'                 : cuda }
+  # ~ # with dropout regularization
+  # ~ params = { 'academic_dataset'    : 'mnist', 
+             # ~ 'target_model_path'   : (models_path/'mnist_model_exp2.pt').as_posix(),
+             # ~ 'mia_model_path'      : (models_path/'mia_model_exp2').as_posix(),
+             # ~ 'custom_target_model' : OrderedDict([
+               # ~ ('conv1'       , nn.Conv2d(1, 10, 3, 1)),
+               # ~ ('relu1'       , nn.ReLU()),
+               # ~ ('maxpool1'    , nn.MaxPool2d(2, 2)),
+               # ~ ('dropout1'    , nn.Dropout(p = 0.5)),
+               # ~ ('conv2'       , nn.Conv2d(10, 10, 3, 1)),
+               # ~ ('relu2'       , nn.ReLU()),
+               # ~ ('maxpool2'    , nn.MaxPool2d(2, 2)),
+               # ~ ('dropout2'    , nn.Dropout(p = 0.5)),
+               # ~ ('to1d'        , Flatten()),
+               # ~ ('dense1'      , nn.Linear(5*5*10, 500)),
+               # ~ ('tanh'        , nn.Tanh()),
+               # ~ ('dropout3'    , nn.Dropout(p = 0.5)),
+               # ~ ('dense2'      , nn.Linear(500, 10)),
+               # ~ ('logsoftmax'  , nn.LogSoftmax(dim=1))
+             # ~ ]),
+             # ~ 'shadow_number'            : 50,
+             # ~ 'shadow_model_base_path'   : (models_path/'shadows'/'shadow_exp2').as_posix(),
+             # ~ 'mia_train_dataset_path'   : (data_path/'mia_train_dataset_exp2').as_posix(),
+             # ~ 'mia_test_dataset_path'    : (data_path/'mia_test_dataset_exp2').as_posix(),
+             # ~ 'class_number'             : 10,
+             # ~ 'use_cuda'                 : cuda }
              
-  exp_stats.new_experiment("MIA on Mnist with dropout regulrization", params)
-  experiment(**params, stats = exp_stats)
+  # ~ exp_stats.new_experiment("MIA on Mnist with dropout regulrization", params)
+  # ~ experiment(**params, stats = exp_stats)
              
   exp_stats.print_results()
   exp_stats.save(log_dir = reports_path)
