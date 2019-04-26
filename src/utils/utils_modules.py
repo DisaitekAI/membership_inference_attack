@@ -5,18 +5,24 @@ from statistics import Statistics
 from torch.nn import init
 
 class Flatten(nn.Module):
-  """
-  Flatten a dimension of a tensor
+  """flatten a dimension of a tensor
   """
   def forward(self, x):
     return x.view(x.size()[0], -1)
     
 class Print(nn.Module):
-  """
-  Print the inputs and/or the shape of a layer. Used to debug models built
-  with an OrderedDict.
+  """print the inputs and/or the shape of a layer. Used to debug models 
+  built with an OrderedDict.  
   """
   def __init__(self, title = None, print_inputs = False, print_shape = True):
+    """
+    Args:
+      title (string): title to print before the data.
+      
+      print_inputs (bool): whether to print the input values of the layer or not. False by default.
+      
+      print_shape (bool): whether to print the shape of the input or not. True by default.
+    """
     super(Print, self).__init__()
     
     self.title        = title
@@ -102,8 +108,22 @@ def weight_init(m):
         init.normal_(param.data)
 
 def train(model, device, train_loader, optimizer, epoch, verbose = True, class_weights = None):
-  """
-  train a model
+  """train a model
+  
+  Args:
+    model (torch Module): the model to be trained.
+    
+    device (torch Device): cpu or gpu use.
+    
+    train_loader (torch DataLoader): iterator of the train batches.
+    
+    optimizer (torch Optimizer): learning algorithm.
+    
+    epoch (int): epoch of the training algorithm.
+    
+    verbose (bool): whether this function display results or not. True by default.
+    
+    class_weights (list(float)): weights to apply to each class to process the loss. 
   """
   model.train()
   for batch_idx, batch in enumerate(train_loader):
@@ -135,8 +155,20 @@ def train(model, device, train_loader, optimizer, epoch, verbose = True, class_w
       
         
 def test(model, device, test_loader, verbose = True, class_weights = None, test_stats = None):
-  """
-  test a model
+  """test a model
+  
+  Args:
+    model (torch Module): the model to be trained.
+    
+    device (torch Device): cpu or gpu use.
+    
+    test_loader (torch DataLoader): iterator of the test batches.
+    
+    verbose (bool): whether this function display results or not. True by default.
+    
+    class_weights (list(float)): weights to apply to each class to process the loss. 
+    
+    test_stats (Statistics): the statistics object that record results.
   """
   model.eval()
   test_loss = 0
