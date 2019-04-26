@@ -3,10 +3,16 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class MIA_model(nn.Module):
+  """Default MIA attack model
+  """
   def __init__(self, input_size = None, hidden_size = None):
     """
-    :input_size size of the input vector
-    :hidden_size size of the hidden layer by default it is 2*input_size
+    
+    Args:
+      input_size (int): size of the input vector.
+      
+      hidden_size (int): size of the hidden layer by default it is 2*input_size
+      
     """
     super(MIA_model, self).__init__()
     
