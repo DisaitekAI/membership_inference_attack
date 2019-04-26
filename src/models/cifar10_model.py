@@ -3,8 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class Cifar10_model(nn.Module):
-  """
-  Bad CNN for the Cifar10 dataset
+  """default CNN for the Cifar10 dataset
   """
   def __init__(self):
     super(Cifar10_model, self).__init__()
