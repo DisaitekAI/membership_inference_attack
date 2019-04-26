@@ -11,9 +11,13 @@ class Target:
   def __init__(self, offline = True, device = torch.device('cpu'), 
                model_path = None):
     """
-    :offline boolean set True by default
-    :model_path path to the trained model
-    :device torch.device("cpu") by default
+    Args:
+      offline (bool): whether we use an offline model or attack an online model. Set True by default.
+    
+      model_path path (string/Path): path for loading the target model.
+    
+      device (torch Device): torch.device("cpu") by default.
+      
     """
     self.offline = offline
     self.device = device
