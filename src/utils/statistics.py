@@ -137,27 +137,27 @@ class Statistics:
             for label, tab in mia.items():
               print(f"    {label}: {tab[i]}")
 
-    for group_label, group in groups.items():
-      print("\nAverage statistics of the group " + group_label + ":\n")
-      for measure_name in group[0]["measures"]: # every models with same label must have same measures
-        values = [model["measures"][measure_name] for model in group]
-        average = None
-   
-        if type(values[0]) == float:
-          average = sum(values)/len(values)
-          
-        if type(values[0]) == list:
-          final_values = []
-          for l in values:
-            if len(l):
-              final_values.append(l[-1])
-          
-          if len(final_values):
-            average = sum(final_values) / len(final_values)
+      for group_label, group in groups.items():
+        print("\nAverage statistics of the group " + group_label + ":\n")
+        for measure_name in group[0]["measures"]: # every models with same label must have same measures
+          values = [model["measures"][measure_name] for model in group]
+          average = None
+     
+          if type(values[0]) == float:
+            average = sum(values)/len(values)
+            
+          if type(values[0]) == list:
+            final_values = []
+            for l in values:
+              if len(l):
+                final_values.append(l[-1])
+            
+            if len(final_values):
+              average = sum(final_values) / len(final_values)
 
-        if average != None:
-          print("\n" + measure_name + " : ")
-          print(average)
+          if average != None:
+            print("\n" + measure_name + " : ")
+            print(average)
           
   def process_mia_dataset(self, dataset):
     """process the mean distribution of input samples from a MIA dataset
