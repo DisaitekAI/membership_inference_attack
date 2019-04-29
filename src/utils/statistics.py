@@ -14,7 +14,6 @@ class Statistics:
     self.y_pred    = []
     self.y_true    = []
     self.exp       = []
-    self.mia_stats = []
 
   def new_experiment(self, name, parameters):
     """declares that a new experiment will be executed.
@@ -27,15 +26,12 @@ class Statistics:
     """
     
     self.process_batchs()
-    experiment = { 'name': name, 'param': parameters, 'model_training': [] }
-    
-    mia = { 'mia_train_in_distribution' : [],
-            'mia_train_out_distribution': [],
-            'mia_test_in_distribution'  : [],
-            'mia_test_out_distribution' : [] }
+    experiment = { 'name': name, 'param': parameters, 'model_training': [], 'mia_stats' : { 'mia_train_in_distribution' : [],
+                                                                                            'mia_train_out_distribution': [],
+                                                                                            'mia_test_in_distribution'  : [],
+                                                                                            'mia_test_out_distribution' : [] } }
     
     self.exp.append(experiment)
-    self.mia_stats.append(mia)
 
   def new_train(self, name = None, label = None):
     """declares that the training of a new model will be executed.
@@ -131,7 +127,7 @@ class Statistics:
           else:
             groups[model["label"]] = [model]
             
-      for mia in self.mia_stats:
+      for mia in experiment['mia_stats']:
         if len(mia['mia_train_in_distribution']):
           class_number = len(mia['mia_train_in_distribution'])
           
@@ -192,7 +188,7 @@ class Statistics:
   def membership_distributions(self, train_datasets, test_datasets):
     """process the mean distribution of all train and test MIA datasets 
     """
-    current_mia_stats = self.mia_stats[-1]
+    current_mia_stats = self.exp[-1]['mia_stats']
     
     for dataset in train_datasets:
       mean_in, mean_out = self.process_mia_dataset(dataset)
