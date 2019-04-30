@@ -33,7 +33,7 @@ def main():
   
   exp_stats = Statistics()
   
-  for i in range(1, 50):
+  for i in range(1, 2):
     dropout_rate = i / 100.0
     params = { 'academic_dataset'       : 'cifar10', 
                'target_model_path'      : (models_path/'cifar10_model_default.pt').as_posix(),

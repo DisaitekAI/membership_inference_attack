@@ -126,16 +126,16 @@ class Statistics:
             groups[model["label"]].append(model)
           else:
             groups[model["label"]] = [model]
-            
-      for mia in experiment['mia_stats']:
-        if len(mia['mia_train_in_distribution']):
-          class_number = len(mia['mia_train_in_distribution'])
-          
-          print('\nMembership mean distributions:')
-          for i in range(class_number):
-            print(f"  class {i}")
-            for label, tab in mia.items():
-              print(f"    {label}: {tab[i]}")
+      
+      mia = experiment['mia_stats']
+      if len(mia['mia_train_in_distribution']):
+        class_number = len(mia['mia_train_in_distribution'])
+      
+        print('\nMembership mean distributions:')
+        for i in range(class_number):
+          print(f"  class {i}")
+          for label, tab in mia.items():
+            print(f"    {label}: {tab[i]}")
 
       for group_label, group in groups.items():
         print("\nAverage statistics of the group " + group_label + ":\n")
