@@ -155,8 +155,8 @@ def train(model, device, train_loader, optimizer, epoch, verbose = True, class_w
     if train_stats is not None:
       train_stats.add_loss(loss)
 
-    if batch_idx == 2:
-      break
+    # if batch_idx == 2:
+    #   break
         
       
         
@@ -196,8 +196,8 @@ def test(model, device, test_loader, verbose = True, class_weights = None, test_
       if test_stats is not None:
         test_stats.new_batch(pred.view_as(target).tolist(), target.tolist())
 
-      if batch_idx == 2:
-        break
+      # if batch_idx == 2:
+      #   break
             
   test_loss /= len(test_loader.dataset)
 
