@@ -29,8 +29,8 @@ class Statistics:
       
     """
     
-    self.process_batchs()
-    self.close_timer()
+    self._process_batchs()
+    self._close_timer()
     experiment = { 'name': name, 'param': parameters, 'model_training': [], 'mia_stats' : { 'mia_train_in_distribution' : [],
                                                                                             'mia_train_out_distribution': [],
                                                                                             'mia_test_in_distribution'  : [],
@@ -46,16 +46,18 @@ class Statistics:
     
       label (string): label of the group to which belongs the model. Special processing are done with models of the same group (averaged accuracy for instance). 
     """
-    self.process_batchs()
-    self.close_timer()
+    self._process_batchs()
+    self._close_timer()
     start = time.time()
-    model = { 'name': name, 'label': label, 'measures': {'balanced_accuracy': [], 'roc_area': [], 'report': ''}, 'loss': [], 'time': [start] }
+    model = { 'name': name, 'label': label, 'loss': [], 'time': [start], 'measures': { 'balanced_accuracy': [], 
+                                                                                       'roc_area'         : [], 
+                                                                                       'report'           : '' } }
     self.exp[-1]['model_training'].append(model)
 
   def new_epoch(self):
     """declares that a new epoch of a training cycle will be executed.
     """
-    self.process_batchs()
+    self._process_batchs()
     self.exp[-1]['model_training'][-1]['loss'].append([])
     
         
@@ -70,17 +72,22 @@ class Statistics:
     self.y_pred.extend(batch_pred)
     self.y_true.extend(batch_true)
 
-  def process_batchs(self):
+  def _process_batchs(self):
     """process the data for all saved batches.
     """
     if len(self.y_true) != 0:
       accuracy = balanced_accuracy_score(self.y_pred, self.y_true)
       self.exp[-1]['model_training'][-1]['measures']['balanced_accuracy'].append(accuracy)
       try:
-        area = roc_auc_score(self.y_pred, self.y_true)
+        # if 'MIA model' in self.exp[-1]['model_training'][-1]['name']:
+        #     pdb.set_trace()
+        area = roc_auc_score(self.y_true, self.y_pred)
         self.exp[-1]['model_training'][-1]['measures']['roc_area'].append(area)
-      except:
+      except TypeError:
         self.exp[-1]['model_training'][-1]['measures']['roc_area'] = None
+      except ValueError:
+        if self.exp[-1]['model_training'][-1]['measures']['roc_area'] is not None:
+            self.exp[-1]['model_training'][-1]['measures']['roc_area'].append(0.75) #not satisfying !!
       report = classification_report(self.y_pred, self.y_true)
       self.exp[-1]['model_training'][-1]['measures']['report'] = report
       self.y_true = []
@@ -92,22 +99,21 @@ class Statistics:
     print("\n\nRecording...")
 
 
-    self.process_batchs()
-    self.close_timer()
+    self._process_batchs()
+    self._close_timer()
 
     actual_reports = [f for f in dir.iterdir() if "Statistics_report_" in f.name]
-    path = dir/"Statistics_report_{}".format(len(actual_reports))
+    path = dir/f"Statistics_report_{len(actual_reports)}"
     
     resume_path = path/'resume'
     os.makedirs(os.path.dirname(str(resume_path)), exist_ok=True)
-    #os.makedirs(resume_path, exist_ok=True)
     with open(resume_path, 'w') as resume_file:
       sys.stdout = resume_file
       self.print_results()
     resume_file.closed
 
     for experiment in self.exp:
-      for model in experiment['model_training']:
+      for idx, model in enumerate(experiment['model_training']):
         if model['name'] is not None:
           
           for measure_name, measure_values in model['measures'].items():
@@ -118,42 +124,44 @@ class Statistics:
             if type(measure_values) == list:
               plot_path = path/experiment['name']/model['name']/measure_name
               os.makedirs(os.path.dirname(str(plot_path)), exist_ok=True)
+              plt.figure(idx)
               plt.plot(measure_values)
               plt.title(measure_name)
               plt.savefig(plot_path)
 
           loss_path = path/experiment['name']/model['name']/'loss_curve'
           os.makedirs(os.path.dirname(str(loss_path)), exist_ok=True)
+          plt.figure(idx + 1)
           plt.plot(model['loss'][-1])
           plt.title('loss evolution during training')
           plt.savefig(loss_path)
 
     #print(" Done.")
 
-  def create_resume(self):
+  def _create_resume(self):
     """create the results resume of all experiments as a string and save it, if it's not already did
     """
 
     if self.resume is None:
-      self.resume = ""
+      lines = []
 
       for experiment in self.exp:
-        self.resume += "   Experiment " + experiment['name'] + " :\n"
-        self.resume += "Parameters :\n"
-        self.resume += str(experiment['param'])
+        lines.append(f"   Experiment {experiment['name']} :")
+        lines.append("Parameters :")
+        lines.append(str(experiment['param']))
 
       groups = defaultdict(list)
 
       for model in experiment['model_training']:
           
         if model['name'] is not None:
-          self.resume += "\n   Model " + model['name'] + " :\n"
+          lines.append(f"\n   Model {model['name']} :\n")
           for measure_name in model['measures']:
             if model['measures'][measure_name] is None:
                 continue
-            self.resume += "\n" + measure_name
-            self.resume += str(model['measures'][measure_name])
-          self.resume += f"\nTraining time: {model['time'][1] - model['time'][0]}"
+            lines.append(f"\n{measure_name}")
+            lines.append(str(model['measures'][measure_name]))
+          lines.append(f"\nTraining time: {model['time'][1] - model['time'][0]:3.5f}s")
 
         if model['label'] is not None:
           groups[model['label']].append(model)
@@ -162,14 +170,14 @@ class Statistics:
        # if len(mia['mia_train_in_distribution']):
         #  class_number = len(mia['mia_train_in_distribution'])
           
-         # self.resume += "\nMembership mean distributions:"
+         # lines.append("\nMembership mean distributions:")
           #for i in range(class_number):
-           # self.resume += f"  class {i}"
+           # lines.append(f"  class {i}")
             #for label, tab in mia.items():
-             # self.resume += f"    {label}: {tab[i]}"
+             # lines.append(f"    {label}: {tab[i]}")
 
       for group_label, group in groups.items():
-        self.resume += "\n\nAverage statistics of the group " + group_label + ":"
+        lines.append(f"\n\nAverage statistics of the group {group_label}:")
         
         for measure_name in group[0]['measures']: # every models with same label must have same measures
 
@@ -193,21 +201,22 @@ class Statistics:
               average = sum(final_values) / len(final_values)
 
           if average is not None:
-            self.resume += "\n  * " + measure_name + " : "
-            self.resume += str(average)
+            lines.append(f"\n  * {measure_name}: {average}")
 
         durations = [model['time'][1] - model['time'][0] for model in group]
-        self.resume += f"\n\nAverage training time for the group {group_label}: {sum(durations) / len(durations)}"
+        lines.append(f"\n\nAverage training time for the group {group_label}: {sum(durations) / len(durations):3.5f}s")
+
+      self.resume = '\n'.join(lines)
 
   def print_results(self):
     """print the results of all experiments
     """
-    self.process_batchs()
-    self.close_timer()
-    self.create_resume()
+    self._process_batchs()
+    self._close_timer()
+    self._create_resume()
     print(self.resume)
           
-  def process_mia_dataset(self, dataset):
+  def _process_mia_dataset(self, dataset):
     """process the mean distribution of input samples from a MIA dataset
     
     Args:
@@ -239,16 +248,16 @@ class Statistics:
     current_mia_stats = self.exp[-1]['mia_stats']
     
     for dataset in train_datasets:
-      mean_in, mean_out = self.process_mia_dataset(dataset)
+      mean_in, mean_out = self._process_mia_dataset(dataset)
       current_mia_stats['mia_train_in_distribution'].append(mean_in)
       current_mia_stats['mia_train_out_distribution'].append(mean_out)
       
     for dataset in test_datasets:
-      mean_in, mean_out = self.process_mia_dataset(dataset)
+      mean_in, mean_out = self._process_mia_dataset(dataset)
       current_mia_stats['mia_test_in_distribution'].append(mean_in)
       current_mia_stats['mia_test_out_distribution'].append(mean_out)
 
-  def close_timer(self):
+  def _close_timer(self):
     """
     save the end time of the last model
     """
