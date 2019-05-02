@@ -1,4 +1,5 @@
-from sklearn.metrics import confusion_matrix, classification_report, balanced_accuracy_score, roc_auc_score, classification_report, roc_curve
+from sklearn.metrics import confusion_matrix, classification_report, balanced_accuracy_score, roc_auc_score, \
+                            classification_report, roc_curve
 import matplotlib.pyplot as plt
 from matplotlib import ticker
 import numpy as np
@@ -96,7 +97,7 @@ class Statistics:
   def save(self, dir):
     """save the results of all experiments in dir
     """
-    print("\n\nRecording...")
+    print("\n\nRecording...", end = ' ')
 
 
     self._process_batchs()
@@ -108,8 +109,8 @@ class Statistics:
     resume_path = path/'resume'
     os.makedirs(os.path.dirname(str(resume_path)), exist_ok=True)
     with open(resume_path, 'w') as resume_file:
-      sys.stdout = resume_file
-      self.print_results()
+      self._create_resume()
+      resume_file.write(self.resume)
     resume_file.closed
 
     for experiment in self.exp:
@@ -136,7 +137,7 @@ class Statistics:
           plt.title('loss evolution during training')
           plt.savefig(loss_path)
 
-    #print(" Done.")
+    print("Done.")
 
   def _create_resume(self):
     """create the results resume of all experiments as a string and save it, if it's not already did
