@@ -107,7 +107,7 @@ def weight_init(m):
       else:
         init.normal_(param.data)
 
-def train(model, device, train_loader, optimizer, epoch, verbose = True, class_weights = None):
+def train(model, device, train_loader, optimizer, epoch, verbose = True, class_weights = None, train_stats = None):
   """train a model
   
   Args:
@@ -151,6 +151,12 @@ def train(model, device, train_loader, optimizer, epoch, verbose = True, class_w
       print('  Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
         epoch, batch_idx * size, len(train_loader.dataset),
         100. * batch_idx / len(train_loader), loss.item()))
+
+    if train_stats is not None:
+      train_stats.add_loss(loss)
+
+    # if batch_idx == 2:
+    #   break
         
       
         
@@ -175,7 +181,7 @@ def test(model, device, test_loader, verbose = True, class_weights = None, test_
   correct = 0
   
   with torch.no_grad():
-    for batch in test_loader:
+    for batch_idx,batch in enumerate(test_loader):
       input_list = batch[0:-1]
       target = batch[-1]
       input_list = [e.to(device) for e in input_list]
@@ -189,6 +195,9 @@ def test(model, device, test_loader, verbose = True, class_weights = None, test_
 
       if test_stats is not None:
         test_stats.new_batch(pred.view_as(target).tolist(), target.tolist())
+
+      # if batch_idx == 2:
+      #   break
             
   test_loss /= len(test_loader.dataset)
 

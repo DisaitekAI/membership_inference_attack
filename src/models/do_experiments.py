@@ -174,7 +174,7 @@ def main():
   # ~ experiment(**params, stats = exp_stats)
              
   exp_stats.print_results()
-  exp_stats.save(log_dir = reports_path)
+  exp_stats.save(dir = reports_path)
 
 if __name__ == '__main__':
   main()
