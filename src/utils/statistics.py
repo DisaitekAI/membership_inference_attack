@@ -171,15 +171,15 @@ class Statistics:
         if model['label'] is not None:
           groups[model['label']].append(model)
 
-      #for mia in experiment['mia_stats']:
-       # if len(mia['mia_train_in_distribution']):
-        #  class_number = len(mia['mia_train_in_distribution'])
-          
-         # lines.append("\nMembership mean distributions:")
-          #for i in range(class_number):
-           # lines.append(f"  class {i}")
-            #for label, tab in mia.items():
-             # lines.append(f"    {label}: {tab[i]}")
+      mia = experiment['mia_stats']
+      if len(mia['mia_train_in_distribution']):
+        class_number = len(mia['mia_train_in_distribution'])
+      
+        lines.append('\nMembership mean distributions:')
+        for i in range(class_number):
+          lines.append(f"  class {i}")
+          for label, tab in mia.items():
+            lines.append(f"    {label}: {tab[i]}")
 
       for group_label, group in groups.items():
         lines.append(f"\n\nAverage statistics of the group {group_label}:")
