@@ -179,7 +179,7 @@ def get_mia_train_dataset(dataset                  = None,
       
       stats.new_train(label = "shadow-model")
       for epoch in range(shadow_train_epochs):
-        train(model, device, train_loader, optimizer, epoch, verbose = False)
+        train(model, device, train_loader, optimizer, epoch, verbose = False, train_stats = stats)
         if epoch == shadow_train_epochs - 1:
           stats.new_epoch()
           test(model, device, test_loader, test_stats = stats, verbose = False)

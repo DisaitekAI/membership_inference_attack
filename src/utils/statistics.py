@@ -59,7 +59,6 @@ class Statistics:
     """declares that a new epoch of a training cycle will be executed.
     """
     self._process_batchs()
-    self.exp[-1]['model_training'][-1]['loss'].append([])
     
         
   def new_batch(self, batch_pred, batch_true):
@@ -77,7 +76,7 @@ class Statistics:
     """process the data for all saved batches.
     """
     if len(self.y_true) != 0:
-      accuracy = balanced_accuracy_score(self.y_pred, self.y_true)
+      accuracy = balanced_accuracy_score(self.y_true, self.y_pred)
       self.exp[-1]['model_training'][-1]['measures']['balanced_accuracy'].append(accuracy)
       try:
         # if 'MIA model' in self.exp[-1]['model_training'][-1]['name']:
@@ -88,8 +87,8 @@ class Statistics:
         self.exp[-1]['model_training'][-1]['measures']['roc_area'] = None
       except ValueError:
         if self.exp[-1]['model_training'][-1]['measures']['roc_area'] is not None:
-            self.exp[-1]['model_training'][-1]['measures']['roc_area'].append(0.75) #not satisfying !!
-      report = classification_report(self.y_pred, self.y_true)
+            self.exp[-1]['model_training'][-1]['measures']['roc_area'].append(0.5) #not satisfying !!
+      report = classification_report(self.y_true, self.y_pred)
       self.exp[-1]['model_training'][-1]['measures']['report'] = report
       self.y_true = []
       self.y_pred = []
@@ -103,8 +102,9 @@ class Statistics:
     self._process_batchs()
     self._close_timer()
 
-    actual_reports = [f for f in dir.iterdir() if "Statistics_report_" in f.name]
-    path = dir/f"Statistics_report_{len(actual_reports)}"
+    basename_report = 'Statistics_report'
+    actual_reports = [f for f in dir.iterdir() if basename_report in f.name]
+    path = dir/f"{basename_report}_{len(actual_reports)}"
     
     resume_path = path/'resume'
     os.makedirs(os.path.dirname(str(resume_path)), exist_ok=True)
@@ -113,14 +113,15 @@ class Statistics:
       resume_file.write(self.resume)
     resume_file.closed
 
+    idx = 0
     for experiment in self.exp:
-      for idx, model in enumerate(experiment['model_training']):
+      for model in experiment['model_training']:
         if model['name'] is not None:
           
           for measure_name, measure_values in model['measures'].items():
 
             if measure_values is None:
-                continue
+              continue
 
             if type(measure_values) == list:
               plot_path = path/experiment['name']/model['name']/measure_name
@@ -129,13 +130,16 @@ class Statistics:
               plt.plot(measure_values)
               plt.title(measure_name)
               plt.savefig(plot_path)
+              idx += 1
 
           loss_path = path/experiment['name']/model['name']/'loss_curve'
           os.makedirs(os.path.dirname(str(loss_path)), exist_ok=True)
-          plt.figure(idx + 1)
-          plt.plot(model['loss'][-1])
+          plt.figure(idx)
+          plt.plot(model['loss'])
           plt.title('loss evolution during training')
           plt.savefig(loss_path)
+          idx += 1
+
 
     print("Done.")
 
@@ -280,4 +284,4 @@ class Statistics:
     """
     collect the loss on the last batch during the training on the training set
     """
-    self.exp[-1]['model_training'][-1]['loss'][-1].append(loss)
+    self.exp[-1]['model_training'][-1]['loss'].append(loss)
