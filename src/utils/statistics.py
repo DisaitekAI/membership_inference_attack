@@ -20,22 +20,25 @@ class Statistics:
     self.exp       = []
     self.resume    = None
 
-  def new_experiment(self, name, parameters):
+  def new_experiment(self, name, parameters, label = None):
     """declares that a new experiment will be executed.
     
     Args:
       name (string): name of the experiment
       
       parameters (Dict): all parameters of the experiment
+
+      label (Dict): contains infos to aggregate with similar experiments
       
     """
-    
+    self._call_stat("new_experiment")
     self._process_batchs()
     self._close_timer()
-    experiment = { 'name': name, 'param': parameters, 'model_training': [], 'mia_stats' : { 'mia_train_in_distribution' : [],
-                                                                                            'mia_train_out_distribution': [],
-                                                                                            'mia_test_in_distribution'  : [],
-                                                                                            'mia_test_out_distribution' : [] } }
+    experiment = { 'name': name, 'label': label, 'param': parameters, 'model_training': [], 
+                   'mia_stats' : { 'mia_train_in_distribution' : [],
+                                   'mia_train_out_distribution': [],
+                                   'mia_test_in_distribution'  : [],
+                                   'mia_test_out_distribution' : [] } }
     
     self.exp.append(experiment)
 
@@ -47,6 +50,7 @@ class Statistics:
     
       label (string): label of the group to which belongs the model. Special processing are done with models of the same group (averaged accuracy for instance). 
     """
+    self._call_stat("new_train")
     self._process_batchs()
     self._close_timer()
     start = time.time()
@@ -58,6 +62,7 @@ class Statistics:
   def new_epoch(self):
     """declares that a new epoch of a training cycle will be executed.
     """
+    self._call_stat("new_epoch")
     self._process_batchs()
     
         
@@ -69,6 +74,7 @@ class Statistics:
       
       batch_true (list(label)): list of the true labels for the current batch.
     """
+    # self._call_stat("new_batch")
     self.y_pred.extend(batch_pred)
     self.y_true.extend(batch_true)
 
@@ -155,61 +161,61 @@ class Statistics:
         lines.append("Parameters :")
         lines.append(str(experiment['param']))
 
-      groups = defaultdict(list)
+        groups = defaultdict(list)
 
-      for model in experiment['model_training']:
+        for model in experiment['model_training']:
           
-        if model['name'] is not None:
-          lines.append(f"\n   Model {model['name']} :\n")
-          for measure_name in model['measures']:
-            if model['measures'][measure_name] is None:
-                continue
-            lines.append(f"\n{measure_name}")
-            lines.append(str(model['measures'][measure_name]))
-          lines.append(f"\nTraining time: {model['time'][1] - model['time'][0]:3.5f}s")
+          if model['name'] is not None:
+            lines.append(f"\n   Model {model['name']} :\n")
+            for measure_name in model['measures']:
+              if model['measures'][measure_name] is None:
+                  continue
+              lines.append(f"\n{measure_name}")
+              lines.append(str(model['measures'][measure_name]))
+            lines.append(f"\nTraining time: {model['time'][1] - model['time'][0]:3.5f}s")
 
-        if model['label'] is not None:
-          groups[model['label']].append(model)
+          if model['label'] is not None:
+            groups[model['label']].append(model)
 
-      mia = experiment['mia_stats']
-      if len(mia['mia_train_in_distribution']):
-        class_number = len(mia['mia_train_in_distribution'])
+        mia = experiment['mia_stats']
+        if len(mia['mia_train_in_distribution']):
+          class_number = len(mia['mia_train_in_distribution'])
       
-        lines.append('\nMembership mean distributions:')
-        for i in range(class_number):
-          lines.append(f"  class {i}")
-          for label, tab in mia.items():
-            lines.append(f"    {label}: {tab[i]}")
+          lines.append('\nMembership mean distributions:')
+          for i in range(class_number):
+            lines.append(f"  class {i}")
+            for label, tab in mia.items():
+              lines.append(f"    {label}: {tab[i]}")
 
-      for group_label, group in groups.items():
-        lines.append(f"\n\nAverage statistics of the group {group_label}:")
+        for group_label, group in groups.items():
+          lines.append(f"\n\nAverage statistics of the group {group_label}:")
         
-        for measure_name in group[0]['measures']: # every models with same label must have same measures
+          for measure_name in group[0]['measures']: # every models with same label must have same measures
 
-          values = [model['measures'][measure_name] for model in group]
+            values = [model['measures'][measure_name] for model in group]
 
-          if None in values:
-            continue
+            if None in values:
+              continue
 
-          average = None
+            average = None
      
-          if type(values[0]) == float:
-            average = sum(values)/len(values)
+            if type(values[0]) == float:
+              average = sum(values)/len(values)
             
-          if type(values[0]) == list:
-            final_values = []
-            for l in values:
-              if len(l):
-                final_values.append(l[-1])
+            if type(values[0]) == list:
+              final_values = []
+              for l in values:
+                if len(l):
+                  final_values.append(l[-1])
             
-            if len(final_values):
-              average = sum(final_values) / len(final_values)
+              if len(final_values):
+                average = sum(final_values) / len(final_values)
 
-          if average is not None:
-            lines.append(f"\n  * {measure_name}: {average}")
+            if average is not None:
+              lines.append(f"\n  * {measure_name}: {average}")
 
-        durations = [model['time'][1] - model['time'][0] for model in group]
-        lines.append(f"\n\nAverage training time for the group {group_label}: {sum(durations) / len(durations):3.5f}s")
+          durations = [model['time'][1] - model['time'][0] for model in group]
+          lines.append(f"\n\nAverage training time for the group {group_label}: {sum(durations) / len(durations):3.5f}s")
 
       self.resume = '\n'.join(lines)
 
@@ -284,4 +290,14 @@ class Statistics:
     """
     collect the loss on the last batch during the training on the training set
     """
+    self._call_stat("add_loss")
     self.exp[-1]['model_training'][-1]['loss'].append(loss)
+
+  def _call_stat(self, method_name):
+    pass
+    # try:
+    #   if 'number 6' in self.exp[-1]['name']:
+    #     print(method_name, [ (model['name'],model['label']) for model in self.exp[-1]['model_training'] ])
+    #     pdb.set_trace()
+    # except:
+    #   pass
