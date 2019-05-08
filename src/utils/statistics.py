@@ -100,6 +100,28 @@ class Statistics:
       self.y_true = []
       self.y_pred = []
 
+  def _final_process(self):
+    for idx in range(len(self.exp)):
+      if self.exp[idx]['mean_accuracies'] is None and self.exp[idx]['label'] is not None:
+        groups_exp = defaultdict(list)
+
+        for experiment_idx, experiment in enumerate(self.exp):
+          if experiment['label'] is not None:
+            groups_exp[experiment['label']['interest_parameter_name']].append((experiment_idx,experiment))
+
+        for group_label, group in groups_exp.items():
+
+          mean_accuracies = [ sum(mia_model_accuracies) / len(mia_model_accuracies) \
+            for mia_model_accuracies in \
+              [ [ model['measures']['balanced_accuracy'][-1] for model in experiment['model_training'] if model['name'] is not None and 'mia' in model['name'].lower() ] ] \
+            for (_,experiment) in group ]
+
+          average = sum(mean_accuracies) / len(mean_accuracies)
+
+          for (experiment_idx,_) in group:
+            self.exp[experiment_idx]['mean_accuracies'] = mean_accuracies     
+
+
   def save(self, dir):
     """save the results of all experiments in dir
     """
@@ -107,12 +129,15 @@ class Statistics:
 
 
     self._process_batchs()
+    self._final_process()
     self._close_timer()
 
     basename_report = 'Statistics_report'
     actual_reports = [f for f in dir.iterdir() if basename_report in f.name]
-    path = dir/f"{basename_report}_{len(actual_reports)}"
-    
+    file = f"{basename_report}_{len(actual_reports)}"
+    path = dir/file
+    print(f"in {file}...", end = ' ')
+
     resume_path = path/'resume'
     os.makedirs(os.path.dirname(str(resume_path)), exist_ok=True)
     with open(resume_path, 'w') as resume_file:
@@ -120,7 +145,6 @@ class Statistics:
       resume_file.write(self.resume)
     resume_file.closed
 
-    idx = 0
     for experiment in self.exp:
 
       for model in experiment['model_training']:
@@ -134,30 +158,27 @@ class Statistics:
             if type(measure_values) == list:
               plot_path = path/experiment['name']/model['name']/measure_name
               os.makedirs(os.path.dirname(str(plot_path)), exist_ok=True)
-              plt.figure(idx)
               plt.plot(measure_values)
               plt.title(measure_name)
               plt.savefig(plot_path)
-              idx += 1
+              plt.clf()
 
           loss_path = path/experiment['name']/model['name']/'loss_curve'
           os.makedirs(os.path.dirname(str(loss_path)), exist_ok=True)
-          plt.figure(idx)
           plt.plot(model['loss'])
           plt.title('loss evolution during training')
           plt.savefig(loss_path)
-          idx += 1
+          plt.clf()
 
       if experiment['label'] is not None:
         mean_path = path/f"Mean_accuracies_curve of experiment '{experiment['label']['interest_parameter_name']}'"
         os.makedirs(os.path.dirname(str(mean_path)), exist_ok=True)
-        plt.figure(idx)
         plt.plot(experiment['label']['interest_parameter_range'], experiment['mean_accuracies'])
         plt.title('Mean attack model accuracy variation')
         plt.xlabel(f"Different {experiment['label']['interest_parameter_name']} values")
         plt.ylabel('Mean mia accuracy')
         plt.savefig(mean_path)
-        idx += 1        
+        plt.clf()
 
 
     print("Done.")
