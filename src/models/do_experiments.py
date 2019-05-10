@@ -82,6 +82,7 @@ def main():
                  ('lsoft', nn.LogSoftmax(dim=1))
                ]),
                'use_cuda'                   : cuda,
+               'no_cache'                   : True,
                'no_mia_train_dataset_cache' : True,
                'no_mia_models_cache'        : True,
                'no_shadow_cache'            : True }

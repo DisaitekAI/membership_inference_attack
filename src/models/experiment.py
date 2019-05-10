@@ -282,7 +282,7 @@ def experiment(academic_dataset           = None,
       stats.new_train(name = 'target model')
       for epoch in range(target_train_epochs):
         stats.new_epoch()
-        train(model, device, train_loader, optimizer, epoch)
+        train(model, device, train_loader, optimizer, epoch, train_stats = stats)
         test(model, device, test_loader, test_stats = stats)
 
       torch.save(model, target_model_path)
@@ -361,7 +361,7 @@ def experiment(academic_dataset           = None,
     stats.new_train(name = f"MIA model {i}", label = "mia-model")                                                                          
     for epoch in range(mia_train_epochs):
       stats.new_epoch()
-      train(mia_models[i].to(device), device, train_loader, optimizer, epoch, verbose = False)
+      train(mia_models[i].to(device), device, train_loader, optimizer, epoch, verbose = False, train_stats = stats)
       test(mia_models[i].to(device), device, test_loader, test_stats = stats)
     
     torch.save(mia_models[i], (mia_model_dir/f"class_{i}.pt").as_posix())
