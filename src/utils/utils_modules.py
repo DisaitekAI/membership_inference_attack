@@ -153,7 +153,7 @@ def train(model, device, train_loader, optimizer, epoch, verbose = True, class_w
         100. * batch_idx / len(train_loader), loss.item()))
 
     if train_stats is not None:
-      train_stats.add_loss(loss)
+      train_stats.add_loss(loss.item())
 
     # if batch_idx == 2:
     #   break
