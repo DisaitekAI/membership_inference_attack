@@ -33,8 +33,7 @@ def main():
   
   exp_stats = Statistics()
   
-  for i in range(1, 50):
-    dropout_rate = i / 100.0
+  for i in range(2, 130, 4):
     params = { 'academic_dataset'       : 'cifar10', 
                'target_model_path'      : (models_path/'cifar10_model_default.pt').as_posix(),
                'mia_model_path'         : (models_path/'mia_model_cifar10_default').as_posix(),
@@ -60,22 +59,35 @@ def main():
                  ('conv1', nn.Conv2d(3, 32, 3, 1)),
                  ('relu1', nn.ReLU()),
                  ('maxp1', nn.MaxPool2d(2, 2)),
-                 ('drop1', nn.Dropout(dropout_rate)),
                  ('conv2', nn.Conv2d(32, 64, 3, 1)),
                  ('relu2', nn.ReLU()),
                  ('maxp2', nn.MaxPool2d(2, 2)),
-                 ('drop2', nn.Dropout(dropout_rate)), 
                  ('flatt', Flatten()),
                  ('dens1', nn.Linear(6*6*64, 512)),
                  ('relu3', nn.ReLU()),
-                 ('drop3', nn.Dropout(dropout_rate)),
                  ('dens2', nn.Linear(512, 10)),
                  ('lsoft', nn.LogSoftmax(dim=1))
                ]),
-               'use_cuda'                : cuda,
-               'no_cache'                : True }
+               'custom_shadow_model'     : OrderedDict([
+                 ('conv1', nn.Conv2d(3, i, 3, 1)),
+                 ('relu1', nn.ReLU()),
+                 ('maxp1', nn.MaxPool2d(2, 2)),
+                 ('conv2', nn.Conv2d(i, i, 3, 1)),
+                 ('relu2', nn.ReLU()),
+                 ('maxp2', nn.MaxPool2d(2, 2)),
+                 ('flatt', Flatten()),
+                 ('dens1', nn.Linear(6*6*i, 512)),
+                 ('relu3', nn.ReLU()),
+                 ('dens2', nn.Linear(512, 10)),
+                 ('lsoft', nn.LogSoftmax(dim=1))
+               ]),
+               'use_cuda'                   : cuda,
+               'no_cache'                   : True,
+               'no_mia_train_dataset_cache' : True,
+               'no_mia_models_cache'        : True,
+               'no_shadow_cache'            : True }
   
-    exp_stats.new_experiment(f"Cifar10 MIA: dropout rate {dropout_rate}", params)
+    exp_stats.new_experiment(f"Cifar10 MIA: shadow dense 1 neuron number {i} (vs target model: 512)", params)
     experiment(**params, stats = exp_stats)
     
   

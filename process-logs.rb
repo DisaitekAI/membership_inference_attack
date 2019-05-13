@@ -15,6 +15,7 @@ logText = IO.read(ARGV[0])
 
 matches = logText.scan(/\[(0\.[0-9]+), (0\.[0-9]+), (0\.[0-9]+), (0\.[0-9]+), (0\.[0-9]+)\]/)
 size = matches.size
+print "#{size / 10} experiments found\n"
 
 x = []
 y = []
@@ -30,15 +31,15 @@ for i in 0..(size / 10) - 1 do
   
   meanAccuracy /= 10.0
   
-  x.append(i * 5)
-  y.append(meanAccuracy)
+  x << 2 + i*4
+  y << meanAccuracy
   
   print "mean MIA models accuracy for experiment #{i}: #{meanAccuracy}\n"
 end
 
 plot = Nyaplot::Plot.new
-plot.x_label('shadow number')
-plot.y_label('mean accuracy')
+plot.x_label('shadow convolution filter number (vs a fixed number of them in the target model)')
+plot.y_label('mean accuracy of MIA attack models')
 
 sc = plot.add(:scatter, x, y)
 sc.color(Nyaplot::Colors.qual)
