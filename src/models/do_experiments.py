@@ -86,9 +86,10 @@ def main():
                'no_mia_train_dataset_cache' : True,
                'no_mia_models_cache'        : True,
                'no_shadow_cache'            : True }
-  
-    exp_stats.new_experiment(f"Cifar10 MIA: shadow dense 1 neuron number {i} (vs target model: 512)", params)
-    experiment(**params, stats = exp_stats)
+    
+    for j in range(5):
+      exp_stats.new_experiment(f"Cifar10 MIA: shadow dense 1 neuron number {i} (vs target model: 512)", params, label = f"exp{i}")
+      experiment(**params, stats = exp_stats)
     
   
   # ~ # default regularized purchase model
