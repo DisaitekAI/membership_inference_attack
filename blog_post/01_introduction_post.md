@@ -51,3 +51,4 @@ attack methodology, prerequisites, consequences and countermeasures
 
 - Hiding model confidence.
 - Differential privacy techniques.
+- Model ensembling.
