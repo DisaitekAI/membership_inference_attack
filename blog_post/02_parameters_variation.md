@@ -7,6 +7,12 @@ scenarios where such attack can be succesful. Due to the huge number
 of parameter combination, each parameter will be explored
 independently.
 
+## Intersection in the shadow model training datasets
+
+Make a the intersection rate vary...
+
+**Graphs and conclusion**
+
 ## Number of shadow model
 
 The number of shadow model is clearly an important parameter of this
