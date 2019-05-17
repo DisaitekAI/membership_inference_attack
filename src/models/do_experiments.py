@@ -32,7 +32,7 @@ def main():
     torch.multiprocessing.set_start_method('spawn', force = 'True')
   
   exp_stats = Statistics()
-  
+
   for i in range(2, 130, 4):
     params = { 'academic_dataset'       : 'cifar10', 
                'target_model_path'      : (models_path/'cifar10_model_default.pt').as_posix(),
@@ -82,13 +82,12 @@ def main():
                  ('lsoft', nn.LogSoftmax(dim=1))
                ]),
                'use_cuda'                   : cuda,
-               'no_cache'                   : True,
                'no_mia_train_dataset_cache' : True,
                'no_mia_models_cache'        : True,
                'no_shadow_cache'            : True }
     
     for j in range(5):
-      exp_stats.new_experiment(f"Cifar10 MIA: shadow dense 1 neuron number {i} (vs target model: 512)", params, label = f"exp{i}")
+      exp_stats.new_experiment(f"Cifar10 MIA: shadow dense 1 neuron number {i} (vs target model: 512)", params)
       experiment(**params, stats = exp_stats)
     
   

@@ -107,7 +107,7 @@ class Statistics:
 
         for experiment_idx, experiment in enumerate(self.exp):
           if experiment['label'] is not None:
-            groups_exp[experiment['label']['interest_parameter_name']].append((experiment_idx,experiment))
+            groups_exp[experiment['label']].append((experiment_idx,experiment))
 
         for group_label, group in groups_exp.items():
 
@@ -171,11 +171,11 @@ class Statistics:
           plt.clf()
 
       if experiment['label'] is not None:
-        mean_path = path/f"Mean_accuracies_curve of experiment '{experiment['label']['interest_parameter_name']}'"
+        mean_path = path/f"Mean_accuracies_curve of experiment '{experiment['label']}'"
         os.makedirs(os.path.dirname(str(mean_path)), exist_ok=True)
         plt.plot(experiment['label']['interest_parameter_range'], experiment['mean_accuracies'])
         plt.title('Mean attack model accuracy variation')
-        plt.xlabel(f"Different {experiment['label']['interest_parameter_name']} values")
+        plt.xlabel(f"Different {experiment['label']} values")
         plt.ylabel('Mean mia accuracy')
         plt.savefig(mean_path)
         plt.clf()
@@ -198,7 +198,7 @@ class Statistics:
         lines.append(str(experiment['param']))
 
         if experiment['label'] is not None:
-          groups_exp[experiment['label']['interest_parameter_name']].append((experiment_idx,experiment))
+          groups_exp[experiment['label']].append((experiment_idx,experiment))
 
         groups_mod = defaultdict(list)
 
