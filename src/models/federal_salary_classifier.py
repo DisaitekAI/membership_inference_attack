@@ -22,8 +22,8 @@ class CategoricalEmbeddings(nn.Module):
         return torch.cat(embeddings, dim = 1)
 
 class NNClassifier(nn.Module):
-    def __init__(self, col_order, col_encoders, col_to_emb_dim, class_number, num_var_number,
-                 lin_size = 256, dropout_rate = 0.):
+    def __init__(self, col_order, col_encoders, col_to_emb_dim, class_number,
+                 num_var_number, lin_size, dropout_rate):
         super(NNClassifier, self).__init__()
         self.cat_emb    = CategoricalEmbeddings(col_order, col_encoders, col_to_emb_dim)
         sum_cat_emb_dim = sum(col_to_emb_dim.values())
