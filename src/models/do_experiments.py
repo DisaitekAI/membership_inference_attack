@@ -33,7 +33,8 @@ def main():
   
   exp_stats = Statistics()
 
-  for i in range(2, 130, 4):
+  for i in range(0, 50, 1):
+    j = i / 100.0
     params = { 'academic_dataset'       : 'cifar10', 
                'target_model_path'      : (models_path/'cifar10_model_default.pt').as_posix(),
                'mia_model_path'         : (models_path/'mia_model_cifar10_default').as_posix(),
@@ -59,25 +60,15 @@ def main():
                  ('conv1', nn.Conv2d(3, 32, 3, 1)),
                  ('relu1', nn.ReLU()),
                  ('maxp1', nn.MaxPool2d(2, 2)),
+                 ('drop1', nn.Dropout(j)),
                  ('conv2', nn.Conv2d(32, 64, 3, 1)),
                  ('relu2', nn.ReLU()),
                  ('maxp2', nn.MaxPool2d(2, 2)),
+                 ('drop2', nn.Dropout(j)),
                  ('flatt', Flatten()),
                  ('dens1', nn.Linear(6*6*64, 512)),
                  ('relu3', nn.ReLU()),
-                 ('dens2', nn.Linear(512, 10)),
-                 ('lsoft', nn.LogSoftmax(dim=1))
-               ]),
-               'custom_shadow_model'     : OrderedDict([
-                 ('conv1', nn.Conv2d(3, i, 3, 1)),
-                 ('relu1', nn.ReLU()),
-                 ('maxp1', nn.MaxPool2d(2, 2)),
-                 ('conv2', nn.Conv2d(i, i, 3, 1)),
-                 ('relu2', nn.ReLU()),
-                 ('maxp2', nn.MaxPool2d(2, 2)),
-                 ('flatt', Flatten()),
-                 ('dens1', nn.Linear(6*6*i, 512)),
-                 ('relu3', nn.ReLU()),
+                 ('drop3', nn.Dropout(j)),
                  ('dens2', nn.Linear(512, 10)),
                  ('lsoft', nn.LogSoftmax(dim=1))
                ]),
