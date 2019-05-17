@@ -83,7 +83,8 @@ def encode_and_normalize_columns(df_data, df_target):
         df_cat[col] = df_cat[col].apply(lambda x: columns_encoders[col][x])
     df_target = df_target.map(lambda x: target_encoder[x])
 
-    return df_cat, df_num, df_target, column_order
+    return (df_cat, df_num, df_target, column_order, columns_encoders,
+            target_encoder)
 
 def create_pytorch_dataset(df_cat, df_num, df_target, column_order):
     dataset = TensorDataset(
@@ -97,11 +98,37 @@ def create_pytorch_dataset(df_cat, df_num, df_target, column_order):
 
     return dataset
 
+def split_dataset(dataset, valid_prop = 0.2):
+    dataset_size                 = len(dataset)
+    valid_size                   = round(valid_prop * dataset_size)
+    lengths                      = [dataset_size - valid_size, valid_size]
+    train_dataset, valid_dataset = random_split(dataset, lengths)
+
+    return train_dataset, valid_dataset
+
+def create_model(column_order, column_encoders, target_encoder,
+                 lin_size = 256, dropout_rate = 0., emb_dim = 5):
+    model = NNClassifier(
+        column_order,
+        columns_encoders,
+        {
+            col : emb_dim
+            for col in columns_encoders
+        },
+        len(target_encoder),
+        num_var_number = df_num.shape[1],
+        lin_size = lin_size,
+        dropout_rate = dropout_rate
+    )
+    print(model)
+
+    return model
+
+
 if __name__ == '__main__':
     data_path                 = Path('../../data/')
     model_folder              = Path('../../models/')
     model_path                = model_folder / 'edlvl_clf_salary_bucket.pt'
-    emb_dim                   = 5
     df                        = pd.read_csv(data_path / 'interim' / 'fed_emp.csv')
     df                        = clean_dataframe(df)
     df                        = df.sample(10000, random_state = seed)
@@ -110,7 +137,9 @@ if __name__ == '__main__':
         df_cat,
         df_num,
         df_target,
-        column_order
+        column_order,
+        columns_encoders,
+        target_encoder
     ) = encode_and_normalize_columns(df_data, df_target)
     dataset                   = create_pytorch_dataset(
         df_cat,
@@ -118,4 +147,23 @@ if __name__ == '__main__':
         df_target,
         column_order
     )
-    print(dataset[0])
+    (
+        train_dataset,
+        valid_dataset
+    ) = split_dataset(dataset)
+    clf = create_model(column_order, columns_encoders, target_encoder)
+
+
+    # train        = True
+    # device       = torch.device('cuda')
+    # model        = model.to(device)
+    # epochs       = 200
+    # batch_size   = 2048
+    # optimizer    = optim.Adam(model.parameters())
+    # criterion    = nn.CrossEntropyLoss()
+    # train_loader = DataLoader(train_dataset, batch_size = batch_size, shuffle = True)
+    # valid_loader = DataLoader(valid_dataset, batch_size = batch_size, shuffle = False)
+
+
+    # def create_model(column_order, column_encoders, target_encoders,
+                 # lin_size = 256, dropout_rate = 0.):
