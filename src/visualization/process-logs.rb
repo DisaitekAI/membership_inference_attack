@@ -15,30 +15,42 @@ logText = IO.read(ARGV[0])
 
 matches = logText.scan(/\[(0\.[0-9]+), (0\.[0-9]+), (0\.[0-9]+), (0\.[0-9]+), (0\.[0-9]+)\]/)
 size = matches.size
-print "#{size / 10} experiments found\n"
+print "#{size / 50} experiments found\n"
 
 x = []
 y = []
 
-for i in 0..(size / 10) - 1 do
-  index = i * 10
-  meanAccuracy = 0
+for i in 0..(size / 50) - 1 do
   
-  for j in index..(index + 9) do
-    accTable = matches[j].map { |m| m.to_f }
-    meanAccuracy += accTable.max
+  expNumber = 0.0
+  meanExpAccuracy = 0
+  for j in 0..4 do
+    meanMIAaccuracy = 0
+    for k in 0..9 do
+      index = i * 50 + j * 10 + k
+      accTable = matches[index].map { |m| m.to_f }
+      meanMIAaccuracy += accTable[-1]
+    end
+    meanMIAaccuracy /= 10.0 
+    if (meanMIAaccuracy - 0.5).abs > 0.03
+      meanExpAccuracy += meanMIAaccuracy
+      expNumber += 1.0
+    end
+  end
+
+  x << 2 + i*4
+  if expNumber == 0
+    y << 0.5
+  else
+    meanExpAccuracy /= expNumber
+    y << meanExpAccuracy
   end
   
-  meanAccuracy /= 10.0
-  
-  x << 2 + i*4
-  y << meanAccuracy
-  
-  print "mean MIA models accuracy for experiment #{i}: #{meanAccuracy}\n"
+  print "mean MIA models accuracy for experiment #{i}: #{meanExpAccuracy}\n"
 end
 
 plot = Nyaplot::Plot.new
-plot.x_label('shadow convolution filter number (vs a fixed number of them in the target model)')
+plot.x_label('shadow convolution filter number')
 plot.y_label('mean accuracy of MIA attack models')
 
 sc = plot.add(:scatter, x, y)
