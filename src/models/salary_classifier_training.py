@@ -55,7 +55,6 @@ def clean_dataframe(df, n_salary_slice = 10):
             slice_size
         )
     )
-    print(df.SALBUCKET.unique())
 
     return df
 
@@ -171,12 +170,12 @@ def train_model(clf, epochs, train_loader, valid_loader, optimizer, device,
     torch.save(clf.state_dict(), model_path)
 
 if __name__ == '__main__':
-    dataset_trunc      = 10000
     data_path          = Path('../../data/')
     model_folder       = Path('../../models/')
     model_path         = model_folder / 'edlvl_clf_salary_bucket.pt'
     df                 = pd.read_csv(data_path / 'interim' / 'fed_emp.csv')
     df                 = clean_dataframe(df)
+    dataset_trunc      = 10000
     df                 = df.sample(dataset_trunc, random_state = seed)
     df_data, df_target = split_input_target(df)
     (
