@@ -16,25 +16,25 @@ seed = 142856
 torch.manual_seed(seed)
 
 col_desc = {
-    'AGYSUB': 'Agency',
-    'LOC': 'Location',
-    'AGELVL': 'Age (bucket)',
-    'EDLVL': 'Education level',
-    'GSEGRD': 'General schedule & Equivalent grade',
-    'LOSLVL': 'Length of service (bucket)',
-    'OCC': 'Occupation',
-    'PATCO': 'Occupation category',
-    'PPGRD': 'Pay Plan & Grade',
-    'STEMOCC': 'STEM Occupation',
-    'SUPERVIS': 'Supervisory status',
-    'TOA': 'Type of appointment',
-    'WORKSCH': 'Work schedule',
-    'WORKSTAT': 'Work status',
-    'LOS': 'Average length of service',
-    'SALBUCKET': 'Salary bucket'
+    'AGYSUB'    : 'Agency',
+    'LOC'       : 'Location',
+    'AGELVL'    : 'Age (bucket)',
+    'EDLVL'     : 'Education level',
+    'GSEGRD'    : 'General schedule & Equivalent grade',
+    'LOSLVL'    : 'Length of service (bucket)',
+    'OCC'       : 'Occupation',
+    'PATCO'     : 'Occupation category',
+    'PPGRD'     : 'Pay Plan & Grade',
+    'STEMOCC'   : 'STEM Occupation',
+    'SUPERVIS'  : 'Supervisory status',
+    'TOA'       : 'Type of appointment',
+    'WORKSCH'   : 'Work schedule',
+    'WORKSTAT'  : 'Work status',
+    'LOS'       : 'Average length of service',
+    'SALBUCKET' : 'Salary bucket'
 }
 
-def clean_dataframe(df):
+def clean_dataframe(df, n_salary_slice = 10):
     # Removing the nan values in columns by either adding a new category
     # or dropping the lines
     df                                   = df[~df.EDLVL.isnull()]
@@ -44,9 +44,18 @@ def clean_dataframe(df):
     df                                   = df[~df.TOA.isnull()]
     df                                   = df[~df.SALARY.isnull()]
     df                                   = df[~df.LOS.isnull()]
-    # Target generation, we partition the salary values in 10 equally sized
-    # buckets.
-    df['SALBUCKET']                      = pd.qcut(df.SALARY, np.arange(0, 1.1, .1))
+    # Target generation, we partition the salary values in
+    # `n_salary_slice` equally sized buckets.
+    slice_size                           = 1 / n_salary_slice
+    df['SALBUCKET']                      = pd.qcut(
+        df.SALARY,
+        np.arange(
+            0,
+            1 + slice_size,
+            slice_size
+        )
+    )
+    print(df.SALBUCKET.unique())
 
     return df
 
@@ -188,7 +197,7 @@ if __name__ == '__main__':
         valid_dataset
     ) = split_dataset(dataset)
     train        = True
-    epochs       = 20
+    epochs       = 100
     batch_size   = 2048
     criterion    = nn.CrossEntropyLoss()
     train_loader = DataLoader(train_dataset, batch_size = batch_size, shuffle = True)
