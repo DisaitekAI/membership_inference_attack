@@ -26,14 +26,15 @@ import torch.nn as nn
   
 def main():
   # run the code on cuda or not for all experiments
-  cuda = True
+  cuda = False
   if cuda:
     import torch.multiprocessing
     torch.multiprocessing.set_start_method('spawn', force = 'True')
   
   exp_stats = Statistics()
 
-  for i in range(1, 129, 4.0):
+
+  for i in range(2, 100, 2):
     params = { 'academic_dataset'       : 'cifar10', 
                'target_model_path'      : (models_path/'cifar10_model_default.pt').as_posix(),
                'mia_model_path'         : (models_path/'mia_model_cifar10_default').as_posix(),
@@ -43,7 +44,7 @@ def main():
                'class_number'           : 10,
                'target_train_epochs'    : 15,
                'shadow_train_epochs'    : 15,
-               'shadow_number'          : 90,
+               'shadow_number'          : i,
                'custom_mia_model'       : OrderedDict([
                  ('dense1'      , nn.Linear(10, 128)),
                  ('relu1'       , nn.ReLU()),
@@ -68,26 +69,13 @@ def main():
                  ('dens2', nn.Linear(512, 10)),
                  ('lsoft', nn.LogSoftmax(dim=1))
                ]),
-               'custom_shadow_models'     : OrderedDict([
-                 ('conv1', nn.Conv2d(3, i, 3, 1)),
-                 ('relu1', nn.ReLU()),
-                 ('maxp1', nn.MaxPool2d(2, 2)),
-                 ('conv2', nn.Conv2d(i, i, 3, 1)),
-                 ('relu2', nn.ReLU()),
-                 ('maxp2', nn.MaxPool2d(2, 2)),
-                 ('flatt', Flatten()),
-                 ('dens1', nn.Linear(6*6*i, 512)),
-                 ('relu3', nn.ReLU()),
-                 ('dens2', nn.Linear(512, 10)),
-                 ('lsoft', nn.LogSoftmax(dim=1))
-               ]),
                'use_cuda'                   : cuda,
                'no_mia_train_dataset_cache' : True,
                'no_mia_models_cache'        : True,
                'no_shadow_cache'            : True }
     
     for j in range(5):
-      exp_stats.new_experiment(f"Cifar10 MIA: shadow conv filter number {i}", params)
+      exp_stats.new_experiment(f"Cifar10 MIA: shadow number {i}", params)
       experiment(**params, stats = exp_stats)
     
   
