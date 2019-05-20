@@ -124,15 +124,51 @@ def create_model(column_order, column_encoders, target_encoder,
 
     return model
 
+def train_model(clf, epochs, train_loader, valid_loader, optimizer, device,
+                column_order, model_path):
+    for epoch in range(epochs):
+        correct = 0
+        total   = 0
+        for i, (*cat_var_list, num_var, y) in enumerate(train_loader):
+            optimizer.zero_grad()
+            cat_var_list   = [t.to(device) for t in cat_var_list]
+            num_var        = num_var.to(device)
+            y              = y.to(device)
+            cat_variables  = dict(zip(column_order, cat_var_list))
+            res            = clf(cat_variables, num_var)
+            loss           = criterion(res, y)
+            correct       += (res.argmax(dim = 1) == y).detach().sum().item()
+            total         += y.shape[0]
+            loss.backward()
+            optimizer.step()
+
+        clf.eval()
+        valid_correct = 0
+        valid_total   = 0
+        with torch.no_grad():
+            for *cat_var_list, num_var, y in valid_loader:
+                cat_var_list   = [t.to(device) for t in cat_var_list]
+                num_var        = num_var.to(device)
+                y              = y.to(device)
+                cat_variables  = dict(zip(column_order, cat_var_list))
+                res            = clf(cat_variables, num_var)
+                valid_correct += (res.argmax(dim = 1) == y).detach().sum().item()
+                valid_total   += y.shape[0]
+        print(f'[{epoch}:{i}] [T] {100. * correct / total:5.2f}%, '
+              f'[V] {100. * valid_correct / valid_total:5.2f}% '
+              f'{loss.item():5.2f}')
+        clf.train()
+
+    torch.save(clf.state_dict(), model_path)
 
 if __name__ == '__main__':
-    data_path                 = Path('../../data/')
-    model_folder              = Path('../../models/')
-    model_path                = model_folder / 'edlvl_clf_salary_bucket.pt'
-    df                        = pd.read_csv(data_path / 'interim' / 'fed_emp.csv')
-    df                        = clean_dataframe(df)
-    df                        = df.sample(10000, random_state = seed)
-    df_data, df_target        = split_input_target(df)
+    data_path          = Path('../../data/')
+    model_folder       = Path('../../models/')
+    model_path         = model_folder / 'edlvl_clf_salary_bucket.pt'
+    df                 = pd.read_csv(data_path / 'interim' / 'fed_emp.csv')
+    df                 = clean_dataframe(df)
+    df                 = df.sample(10000, random_state = seed)
+    df_data, df_target = split_input_target(df)
     (
         df_cat,
         df_num,
@@ -141,7 +177,7 @@ if __name__ == '__main__':
         columns_encoders,
         target_encoder
     ) = encode_and_normalize_columns(df_data, df_target)
-    dataset                   = create_pytorch_dataset(
+    dataset            = create_pytorch_dataset(
         df_cat,
         df_num,
         df_target,
@@ -151,19 +187,26 @@ if __name__ == '__main__':
         train_dataset,
         valid_dataset
     ) = split_dataset(dataset)
-    clf = create_model(column_order, columns_encoders, target_encoder)
-
-
-    # train        = True
-    # device       = torch.device('cuda')
-    # model        = model.to(device)
-    # epochs       = 200
-    # batch_size   = 2048
-    # optimizer    = optim.Adam(model.parameters())
-    # criterion    = nn.CrossEntropyLoss()
-    # train_loader = DataLoader(train_dataset, batch_size = batch_size, shuffle = True)
-    # valid_loader = DataLoader(valid_dataset, batch_size = batch_size, shuffle = False)
-
-
-    # def create_model(column_order, column_encoders, target_encoders,
-                 # lin_size = 256, dropout_rate = 0.):
+    train        = True
+    epochs       = 20
+    batch_size   = 2048
+    criterion    = nn.CrossEntropyLoss()
+    train_loader = DataLoader(train_dataset, batch_size = batch_size, shuffle = True)
+    valid_loader = DataLoader(valid_dataset, batch_size = batch_size, shuffle = False)
+    device       = torch.device('cuda')
+    clf          = create_model(column_order, columns_encoders, target_encoder)
+    clf          = clf.to(device)
+    optimizer    = optim.Adam(clf.parameters())
+    if train:
+        train_model(
+            clf,
+            epochs,
+            train_loader,
+            valid_loader,
+            optimizer,
+            device,
+            column_order,
+            model_path
+        )
+    clf.load_state_dict(torch.load(model_path))
+    clf.eval()
