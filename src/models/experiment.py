@@ -338,6 +338,8 @@ def experiment(academic_dataset           = None,
   else:
     for i in range(class_number):
       mia_models.append(nn.Sequential(custom_mia_model).to(device))
+
+  import pdb; pdb.set_trace()
                                              
   optim_args = {}
   if custom_mia_optim_args is not None:
