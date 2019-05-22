@@ -13,7 +13,7 @@ raise ArgumentError.new('the given path does not exists') if !File.exists?(logPa
   
 logText = IO.read(ARGV[0])
 
-matches = logText.scan(/\[(0\.[0-9]+), (0\.[0-9]+), (0\.[0-9]+), (0\.[0-9]+), (0\.[0-9]+)\]/)
+matches = logText.scan(/balanced_accuracy\n\[(0\.[0-9]+), (0\.[0-9]+), (0\.[0-9]+), (0\.[0-9]+), (0\.[0-9]+)\]/)
 size = matches.size
 print "#{size / 50} experiments found\n"
 
@@ -38,7 +38,7 @@ for i in 0..(size / 50) - 1 do
     end
   end
 
-  x << 2 + i*4
+  x << 2 + i*2
   if expNumber == 0
     y << 0.5
   else

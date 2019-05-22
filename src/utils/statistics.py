@@ -19,9 +19,8 @@ class Statistics:
     self.y_true    = []
     self.exp       = []
     self.resume    = None
-    self.curve     = None
 
-  def new_experiment(self, name, parameters, label = None, curve = None):
+  def new_experiment(self, name, parameters, label = None):
     """declares that a new experiment will be executed.
     
     Args:
@@ -35,22 +34,14 @@ class Statistics:
     self._call_stat("new_experiment")
     self._process_batchs()
     self._close_timer()
-
-    cl_st = {'mean_accuracies': None}
-    for exp in self.exp:
-      if exp['label'] == label:
-        cl_st = exp['class_stats']
-        break
-    experiment = { 'name': name, 'label': label, 'class_stats': cl_st,'param': parameters, 'model_training': [], 
+    experiment = { 'name': name, 'label': label, 'param': parameters, 'model_training': [], 
                    'mia_stats' : { 'mia_train_in_distribution' : [],
                                    'mia_train_out_distribution': [],
                                    'mia_test_in_distribution'  : [],
                                    'mia_test_out_distribution' : [] }, 
                     'mean_accuracies': None }
-    # 'class_stats' is common to every same labelized experiments, and is used to save statistics of the class label
-
+    
     self.exp.append(experiment)
-    self.curve = curve # weird, it's suppose to be unique so why put it for every new experiment ?
 
   def new_train(self, name = None, label = None):
     """declares that the training of a new model will be executed.
@@ -128,7 +119,7 @@ class Statistics:
           average = sum(mean_accuracies) / len(mean_accuracies)
 
           for (experiment_idx,_) in group:
-            self.exp[experiment_idx]['class_stats']['mean_accuracies'] = mean_accuracies     
+            self.exp[experiment_idx]['mean_accuracies'] = mean_accuracies     
 
 
   def save(self, dir):
@@ -179,28 +170,17 @@ class Statistics:
           plt.savefig(loss_path)
           plt.clf()
 
-      # if experiment['label'] is not None:
-      #   mean_path = path/f"Mean_accuracies_curve of experiment '{experiment['label']}'"
-      #   os.makedirs(os.path.dirname(str(mean_path)), exist_ok=True)
-      #   plt.plot(experiment['label']['interest_parameter_range'], experiment['mean_accuracies'])
-      #   plt.title('Mean attack model accuracy variation')
-      #   plt.xlabel(f"Different {experiment['label']} values")
-      #   plt.ylabel('Mean mia accuracy')
-      #   plt.savefig(mean_path)
-      #   plt.clf()
+      if experiment['label'] is not None:
+        mean_path = path/f"Mean_accuracies_curve of experiment '{experiment['label']}'"
+        os.makedirs(os.path.dirname(str(mean_path)), exist_ok=True)
+        plt.plot(experiment['label']['interest_parameter_range'], experiment['mean_accuracies'])
+        plt.title('Mean attack model accuracy variation')
+        plt.xlabel(f"Different {experiment['label']} values")
+        plt.ylabel('Mean mia accuracy')
+        plt.savefig(mean_path)
+        plt.clf()
 
-    mean_path = path/'Mean accuracies curve of experiments'
-    os.makedirs(os.path.dirname(str(mean_path)), exist_ok=True)
-    comprehensive_y_values = [exp['class_stats']['mean_accuracies'] for exp in self.exp]
-    comprehensive_labels = [exp['label'] for exp in self.exp]
-    y_values = [val for (idx,val) in enumerate(comprehensive_y_values) if comprehensive_labels[idx] not in comprehensive_labels[idx+1:] ]
-    plt.plot(self.curve['x_range'], y_values)
-    plt.title('Mean attack model accuracy variation')
-    plt.xlabel(self.curve['x_name'])
-    plt.ylabel(self.curve['y_name'])
-    plt.savefig(mean_path)
-    plt.clf()
-    
+
     print("Done.")
 
   def _create_resume(self):
@@ -277,6 +257,7 @@ class Statistics:
           lines.append(f"\n\nAverage training time for the group {group_label}: {sum(durations) / len(durations):3.5f}s")
 
       for group_label, group in groups_exp.items():
+        lines.append(f"\n\nAverage performances of the group of experiments '{group_label}':")
 
         mean_accuracies = [ sum(mia_model_accuracies) / len(mia_model_accuracies) \
           for mia_model_accuracies in \
@@ -284,10 +265,10 @@ class Statistics:
           for (_,experiment) in group ]
 
         average = sum(mean_accuracies) / len(mean_accuracies)
-        lines.append(f"\nAverage mean accuracy of the group of experiments '{group_label}': {average}")
+        lines.append(f"Average mean accuracy of the group of experiments '{group_label}': {average}")
 
         for (experiment_idx,_) in group:
-          self.exp[experiment_idx]['class_stats']['mean_accuracies'] = mean_accuracies
+          self.exp[experiment_idx]['mean_accuracies'] = mean_accuracies
 
       self.resume = '\n'.join(lines)
 
