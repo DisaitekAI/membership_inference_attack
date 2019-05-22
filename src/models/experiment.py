@@ -27,7 +27,7 @@ from cifar10_model import Cifar10_model
 from target import Target
 from shadow_swarm_trainer import get_mia_train_dataset, get_mia_test_dataset
 from mia_model import MIA_model
-from utils_modules import train, test
+from utils_modules import train, test, weight_init
 from miscellaneous import fixed_random_split, BalancedSampler
 from statistics import Statistics
 
@@ -35,6 +35,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+from copy import deepcopy
 from torch.utils.data.sampler import WeightedRandomSampler
 
 def cache_handling(no_cache                   = False,
@@ -330,16 +331,14 @@ def experiment(academic_dataset           = None,
                                            class_number)  
 
   stats.membership_distributions(mia_train_datasets, mia_test_datasets)
-                                           
+
   mia_models = list()
   if custom_mia_model is None:
     for i in range(class_number):
       mia_models.append(MIA_model(input_size = class_number).to(device))
   else:
     for i in range(class_number):
-      mia_models.append(nn.Sequential(custom_mia_model).to(device))
-
-  import pdb; pdb.set_trace()
+      mia_models.append(deepcopy(nn.Sequential(custom_mia_model)).to(device))
                                              
   optim_args = {}
   if custom_mia_optim_args is not None:
@@ -351,7 +350,10 @@ def experiment(academic_dataset           = None,
   
   for i in range(class_number):
     print(f"training the MIA model for class {i}")  
-    optimizer = optim.Adam(mia_models[i].parameters(), **optim_args)  
+    model = mia_models[i]
+    model.apply(weight_init)
+
+    optimizer = optim.Adam(model.parameters(), **optim_args)  
                                                         
     train_loader = torch.utils.data.DataLoader(mia_train_datasets[i], batch_size = mia_batch_size, 
                                                shuffle = True, **cuda_args)    
@@ -363,8 +365,8 @@ def experiment(academic_dataset           = None,
     stats.new_train(name = f"MIA model {i}", label = "mia-model")                                                                          
     for epoch in range(mia_train_epochs):
       stats.new_epoch()
-      train(mia_models[i].to(device), device, train_loader, optimizer, epoch, verbose = False, train_stats = stats)
-      test(mia_models[i].to(device), device, test_loader, test_stats = stats)
+      train(model.to(device), device, train_loader, optimizer, epoch, verbose = False, train_stats = stats)
+      test(model.to(device), device, test_loader, test_stats = stats)
     
-    torch.save(mia_models[i], (mia_model_dir/f"class_{i}.pt").as_posix())
+    torch.save(model, (mia_model_dir/f"class_{i}.pt").as_posix())
     

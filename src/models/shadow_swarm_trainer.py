@@ -144,7 +144,7 @@ def get_mia_train_dataset(dataset                  = None,
     for i in range(shadow_number):
       # copy model parameters but we wanna keep the weights randomized
       # differently between shadows (initialized at training time, see later)
-      model = deepcopy(shadow_model)
+      model = deepcopy(shadow_model).to(device)
       shadow_models.append(model)
     
     # remove old models if necessary
@@ -159,7 +159,7 @@ def get_mia_train_dataset(dataset                  = None,
       
     # shadow swarm training
     for i in range(shadow_number):
-      model = shadow_models[i]
+      model = shadow_models[i].to(device)
       model.apply(weight_init)
       
       j = 0
@@ -179,10 +179,10 @@ def get_mia_train_dataset(dataset                  = None,
       
       stats.new_train(label = "shadow-model")
       for epoch in range(shadow_train_epochs):
-        train(model, device, train_loader, optimizer, epoch, verbose = False, train_stats = stats)
+        train(model.to(device), device, train_loader, optimizer, epoch, verbose = False, train_stats = stats)
         if epoch == shadow_train_epochs - 1:
           stats.new_epoch()
-          test(model, device, test_loader, test_stats = stats, verbose = False)
+          test(model.to(device), device, test_loader, test_stats = stats, verbose = False)
         
       torch.save(model, shadow_model_base_path + "_{}.pt".format(i))
       progress_bar(iteration = i, total = shadow_number - 1)
