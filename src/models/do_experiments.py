@@ -25,57 +25,87 @@ from statistics import Statistics
 import torch.nn as nn
   
 def main():
-  # run the code on cuda or not for all experiments
-  cuda = False
-  if cuda:
-    import torch.multiprocessing
-    torch.multiprocessing.set_start_method('spawn', force = 'True')
-  
   exp_stats = Statistics()
-
-  for i in range(2, 100, 2):
-    params = { 'academic_dataset'       : 'cifar10', 
-               'target_model_path'      : (models_path/'cifar10_model_default.pt').as_posix(),
-               'mia_model_path'         : (models_path/'mia_model_cifar10_default').as_posix(),
-               'shadow_model_base_path' : (models_path/'shadows'/'shadow_cifar10_default').as_posix(),
-               'mia_train_dataset_path' : (data_path/'mia_train_dataset_cifar10_default').as_posix(),
-               'mia_test_dataset_path'  : (data_path/'mia_test_dataset_cifar10_default').as_posix(),
+  
+  params = { 'academic_dataset'       : 'federal', 
+               'target_model_path'      : (models_path/'federal_model_default.pt').as_posix(),
+               'mia_model_path'         : (models_path/'mia_model_federal_default').as_posix(),
+               'shadow_model_base_path' : (models_path/'shadows'/'shadow_federal_default').as_posix(),
+               'mia_train_dataset_path' : (data_path/'mia_train_dataset_federal_default').as_posix(),
+               'mia_test_dataset_path'  : (data_path/'mia_test_dataset_federal_default').as_posix(),
                'class_number'           : 10,
                'target_train_epochs'    : 15,
                'shadow_train_epochs'    : 15,
-               'shadow_number'          : i,
-               'custom_mia_model'       : OrderedDict([
-                 ('dense1'      , nn.Linear(10, 128)),
-                 ('relu1'       , nn.ReLU()),
-                 ('dropout1'    , nn.Dropout(0.3)),
-                 ('dense2'      , nn.Linear(128, 64)),
-                 ('relu2'       , nn.ReLU()),
-                 ('dropout2'    , nn.Dropout(0.2)),
-                 ('dense3'      , nn.Linear(64, 2)),
-                 ('relu3'       , nn.ReLU()),
-                 ('logsoftmax'  , nn.LogSoftmax(dim=1))
-               ]),
-               'custom_target_model'     : OrderedDict([
-                 ('conv1', nn.Conv2d(3, 32, 3, 1)),
-                 ('relu1', nn.ReLU()),
-                 ('maxp1', nn.MaxPool2d(2, 2)),
-                 ('conv2', nn.Conv2d(32, 64, 3, 1)),
-                 ('relu2', nn.ReLU()),
-                 ('maxp2', nn.MaxPool2d(2, 2)),
-                 ('flatt', Flatten()),
-                 ('dens1', nn.Linear(6*6*64, 512)),
-                 ('relu3', nn.ReLU()),
-                 ('dens2', nn.Linear(512, 10)),
-                 ('lsoft', nn.LogSoftmax(dim=1))
-               ]),
-               'use_cuda'                   : cuda,
-               'no_mia_train_dataset_cache' : True,
-               'no_mia_models_cache'        : True,
-               'no_shadow_cache'            : True }
+               'shadow_number'          : 90,
+               'no_cache'               : True }
+               
+  exp_stats.new_experiment("MIA on the federal", params)
+  experiment(**params, stats = exp_stats)
+               
+  # ~ # run the code on cuda or not for all experiments
+  # ~ cuda = False
+  # ~ if cuda:
+    # ~ import torch.multiprocessing
+    # ~ torch.multiprocessing.set_start_method('spawn', force = 'True')
+  
+  # ~ exp_stats = Statistics()
+
+  # ~ for i in range(1, 129, 4):
+    # ~ params = { 'academic_dataset'       : 'cifar10', 
+               # ~ 'target_model_path'      : (models_path/'cifar10_model_default.pt').as_posix(),
+               # ~ 'mia_model_path'         : (models_path/'mia_model_cifar10_default').as_posix(),
+               # ~ 'shadow_model_base_path' : (models_path/'shadows'/'shadow_cifar10_default').as_posix(),
+               # ~ 'mia_train_dataset_path' : (data_path/'mia_train_dataset_cifar10_default').as_posix(),
+               # ~ 'mia_test_dataset_path'  : (data_path/'mia_test_dataset_cifar10_default').as_posix(),
+               # ~ 'class_number'           : 10,
+               # ~ 'target_train_epochs'    : 15,
+               # ~ 'shadow_train_epochs'    : 15,
+               # ~ 'shadow_number'          : 90,
+               # ~ 'custom_mia_model'       : OrderedDict([
+                 # ~ ('dense1'      , nn.Linear(10, 128)),
+                 # ~ ('relu1'       , nn.ReLU()),
+                 # ~ ('dropout1'    , nn.Dropout(0.3)),
+                 # ~ ('dense2'      , nn.Linear(128, 64)),
+                 # ~ ('relu2'       , nn.ReLU()),
+                 # ~ ('dropout2'    , nn.Dropout(0.2)),
+                 # ~ ('dense3'      , nn.Linear(64, 2)),
+                 # ~ ('relu3'       , nn.ReLU()),
+                 # ~ ('logsoftmax'  , nn.LogSoftmax(dim=1))
+               # ~ ]),
+               # ~ 'custom_target_model'     : OrderedDict([
+                 # ~ ('conv1', nn.Conv2d(3, 32, 3, 1)),
+                 # ~ ('relu1', nn.ReLU()),
+                 # ~ ('maxp1', nn.MaxPool2d(2, 2)),
+                 # ~ ('conv2', nn.Conv2d(32, 64, 3, 1)),
+                 # ~ ('relu2', nn.ReLU()),
+                 # ~ ('maxp2', nn.MaxPool2d(2, 2)),
+                 # ~ ('flatt', Flatten()),
+                 # ~ ('dens1', nn.Linear(6*6*64, 512)),
+                 # ~ ('relu3', nn.ReLU()),
+                 # ~ ('dens2', nn.Linear(512, 10)),
+                 # ~ ('lsoft', nn.LogSoftmax(dim=1))
+               # ~ ]),
+               # ~ 'custom_shadow_model'     : OrderedDict([
+                 # ~ ('conv1', nn.Conv2d(3, i, 3, 1)),
+                 # ~ ('relu1', nn.ReLU()),
+                 # ~ ('maxp1', nn.MaxPool2d(2, 2)),
+                 # ~ ('conv2', nn.Conv2d(i, i, 3, 1)),
+                 # ~ ('relu2', nn.ReLU()),
+                 # ~ ('maxp2', nn.MaxPool2d(2, 2)),
+                 # ~ ('flatt', Flatten()),
+                 # ~ ('dens1', nn.Linear(6*6*i, 512)),
+                 # ~ ('relu3', nn.ReLU()),
+                 # ~ ('dens2', nn.Linear(512, 10)),
+                 # ~ ('lsoft', nn.LogSoftmax(dim=1))
+               # ~ ]),
+               # ~ 'use_cuda'                   : cuda,
+               # ~ 'no_mia_train_dataset_cache' : True,
+               # ~ 'no_mia_models_cache'        : True,
+               # ~ 'no_shadow_cache'            : True }
     
-    for j in range(5):
-      exp_stats.new_experiment(f"Cifar10 MIA: shadow number {i}", params)
-      experiment(**params, stats = exp_stats)
+    # ~ for j in range(5):
+      # ~ exp_stats.new_experiment(f"Cifar10 MIA: shadow conv filter number {i}", params)
+      # ~ experiment(**params, stats = exp_stats)
     
   
   # ~ # default regularized purchase model

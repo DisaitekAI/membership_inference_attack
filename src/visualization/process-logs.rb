@@ -32,13 +32,11 @@ for i in 0..(size / 50) - 1 do
       meanMIAaccuracy += accTable[-1]
     end
     meanMIAaccuracy /= 10.0 
-    if (meanMIAaccuracy - 0.5).abs > 0.03
-      meanExpAccuracy += meanMIAaccuracy
-      expNumber += 1.0
-    end
+    meanExpAccuracy += meanMIAaccuracy
+    expNumber += 1.0
   end
 
-  x << 2 + i*2
+  x << 1 + i*4
   if expNumber == 0
     y << 0.5
   else

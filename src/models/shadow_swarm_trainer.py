@@ -204,8 +204,11 @@ def get_mia_train_dataset(dataset                  = None,
                        batch_size = 1000, shuffle = True, **cuda_args)
     
     with torch.no_grad():
-      for data, targets in data_in_loader:
-        data, targets = data.to(device), targets.to(device)
+      for batch in data_in_loader:
+        data = batch[0:-1]
+        target = batch[-1]
+        data = [e.to(device) for e in data]
+        target = target.to(device)
         
         outputs = current_shadow(data)
         
@@ -217,8 +220,11 @@ def get_mia_train_dataset(dataset                  = None,
                        batch_size = 1000, shuffle = True, **cuda_args)
                        
     with torch.no_grad():
-      for data, targets in data_out_loader:
-        data, targets = data.to(device), targets.to(device)
+      for batch in data_in_loader:
+        data = batch[0:-1]
+        target = batch[-1]
+        data = [e.to(device) for e in data]
+        target = target.to(device)
         
         outputs = current_shadow(data)
         
@@ -300,8 +306,11 @@ def get_mia_test_dataset(train_dataset    = None,
                                                 shuffle = True, **cuda_args)
   
   with torch.no_grad():
-    for data, targets in data_in_loader:
-      data, targets = data.to(device), targets.to(device)
+    for batch in data_in_loader:
+      data = batch[0:-1]
+      target = batch[-1]
+      data = [e.to(device) for e in data]
+      target = target.to(device)
       
       outputs = target_model(data)
       
@@ -313,8 +322,11 @@ def get_mia_test_dataset(train_dataset    = None,
                                                 shuffle = True, **cuda_args)
                      
   with torch.no_grad():
-    for data, targets in data_out_loader:
-      data, targets = data.to(device), targets.to(device)
+    for batch in data_in_loader:
+      data = batch[0:-1]
+      target = batch[-1]
+      data = [e.to(device) for e in data]
+      target = target.to(device)
       
       outputs = target_model(data)
       

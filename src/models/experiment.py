@@ -24,6 +24,7 @@ from dataset_generator import Dataset_generator
 from mnist_model import Mnist_model
 from purchase_model import Purchase_model
 from cifar10_model import Cifar10_model
+from federal_model import FederalModel
 from target import Target
 from shadow_swarm_trainer import get_mia_train_dataset, get_mia_test_dataset
 from mia_model import MIA_model
@@ -270,6 +271,8 @@ def experiment(academic_dataset           = None,
           model = Purchase_model().to(device)
         if academic_dataset == 'cifar10':
           model = Cifar10_model().to(device)
+        if academic_dataset == 'federal':
+          model = FederalModel().to(device)
       else:
         model = nn.Sequential(custom_target_model).to(device)
       

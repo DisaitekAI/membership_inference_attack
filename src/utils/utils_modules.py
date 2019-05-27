@@ -138,7 +138,7 @@ def train(model, device, train_loader, optimizer, epoch, verbose = True, class_w
       
     optimizer.zero_grad()
     output = model(*input_list)
-
+    
     loss = F.nll_loss(output, target, weight = class_weights)
     loss.backward()
     optimizer.step()
