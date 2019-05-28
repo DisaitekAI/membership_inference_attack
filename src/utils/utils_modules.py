@@ -160,7 +160,7 @@ def train(model, device, train_loader, optimizer, epoch, verbose = True, class_w
         
       
         
-def test(model, device, test_loader, verbose = True, class_weights = None, test_stats = None):
+def test(model, device, test_loader, verbose = True, class_weights = None, test_stats = None, name = "test set"):
   """test a model
   
   Args:
@@ -202,6 +202,6 @@ def test(model, device, test_loader, verbose = True, class_weights = None, test_
   test_loss /= len(test_loader.dataset)
 
   if verbose:
-    print('\n  Test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
-          test_loss, correct, len(test_loader.dataset),
+    print('\n  {}: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
+          name, test_loss, correct, len(test_loader.dataset),
           100. * correct / len(test_loader.dataset)))

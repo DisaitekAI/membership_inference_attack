@@ -36,8 +36,8 @@ class FederalModel(nn.Module):
     dropout_rate = 0.
     emb_dim = 5
     
-    col_to_emb_dim = { col : emb_dim for col in columns_encoders }
-    class_number   = len(target_encoder)
+    col_to_emb_dim  = { col : emb_dim for col in columns_encoders }
+    class_number    = len(target_encoder)
 
     self.cat_emb    = CategoricalEmbeddings(column_order, columns_encoders, col_to_emb_dim)
     sum_cat_emb_dim = sum(col_to_emb_dim.values())

@@ -139,7 +139,7 @@ def get_mia_train_dataset(dataset                  = None,
     if not shadow_dir.exists():
       shadow_dir.mkdir()
       
-    shadow_datasets, _ = split_shadow_dataset(dataset, max(shadow_number, 100))
+    shadow_datasets, _ = split_shadow_dataset(dataset, max(shadow_number, 50))
 
     for i in range(shadow_number):
       # copy model parameters but we wanna keep the weights randomized
@@ -190,7 +190,7 @@ def get_mia_train_dataset(dataset                  = None,
   # set all shadow models in evaluation mode
   print("\nbuilding the MIA train datasets")
   
-  shadow_datasets_in, shadow_datasets_out = split_shadow_dataset(dataset, max(shadow_number, 100))
+  shadow_datasets_in, shadow_datasets_out = split_shadow_dataset(dataset, max(shadow_number, 50))
   
   # build the MIA datasets
   input_tensor_lists  = [list() for i in range(class_number)]
@@ -206,11 +206,11 @@ def get_mia_train_dataset(dataset                  = None,
     with torch.no_grad():
       for batch in data_in_loader:
         data = batch[0:-1]
-        target = batch[-1]
+        targets = batch[-1]
         data = [e.to(device) for e in data]
-        target = target.to(device)
-        
-        outputs = current_shadow(data)
+        targets = targets.to(device)
+
+        outputs = current_shadow(*data)
         
         for target, output in zip(targets, outputs):
           input_tensor_lists[target].append(output)
@@ -220,13 +220,13 @@ def get_mia_train_dataset(dataset                  = None,
                        batch_size = 1000, shuffle = True, **cuda_args)
                        
     with torch.no_grad():
-      for batch in data_in_loader:
+      for batch in data_out_loader:
         data = batch[0:-1]
-        target = batch[-1]
+        targets = batch[-1]
         data = [e.to(device) for e in data]
-        target = target.to(device)
+        targets = targets.to(device)
         
-        outputs = current_shadow(data)
+        outputs = current_shadow(*data)
         
         for target, output in zip(targets, outputs):
           input_tensor_lists[target].append(output)
@@ -308,11 +308,11 @@ def get_mia_test_dataset(train_dataset    = None,
   with torch.no_grad():
     for batch in data_in_loader:
       data = batch[0:-1]
-      target = batch[-1]
+      targets = batch[-1]
       data = [e.to(device) for e in data]
-      target = target.to(device)
+      targets = targets.to(device)
       
-      outputs = target_model(data)
+      outputs = target_model(*data)
       
       for target, output in zip(targets, outputs):
         input_tensor_lists[target].append(output)
@@ -322,13 +322,13 @@ def get_mia_test_dataset(train_dataset    = None,
                                                 shuffle = True, **cuda_args)
                      
   with torch.no_grad():
-    for batch in data_in_loader:
+    for batch in data_out_loader:
       data = batch[0:-1]
-      target = batch[-1]
+      targets = batch[-1]
       data = [e.to(device) for e in data]
-      target = target.to(device)
+      targets = targets.to(device)
       
-      outputs = target_model(data)
+      outputs = target_model(*data)
       
       for target, output in zip(targets, outputs):
         input_tensor_lists[target].append(output)

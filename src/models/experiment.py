@@ -287,7 +287,8 @@ def experiment(academic_dataset           = None,
       for epoch in range(target_train_epochs):
         stats.new_epoch()
         train(model, device, train_loader, optimizer, epoch, train_stats = stats)
-        test(model, device, test_loader, test_stats = stats)
+        test(model, device, train_loader, test_stats = stats, name = "train set")
+        test(model, device, test_loader, test_stats = stats, name = "test set")
 
       torch.save(model, target_model_path)
       
