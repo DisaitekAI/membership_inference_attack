@@ -253,7 +253,7 @@ def experiment(academic_dataset           = None,
       train_set = dg.generate()
       # we take only the first half of the dataset to train the model
       # the second half is used to train the shadow models
-      half_len = int(len(train_set) / 2)
+      half_len = int(len(train_set) / 3)
       train_set, shadow_swarm_dataset = fixed_random_split(train_set, [half_len, len(train_set) - half_len])
       
       train_loader = torch.utils.data.DataLoader(train_set, batch_size = target_batch_size, 

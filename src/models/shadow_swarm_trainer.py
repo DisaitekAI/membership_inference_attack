@@ -139,7 +139,7 @@ def get_mia_train_dataset(dataset                  = None,
     if not shadow_dir.exists():
       shadow_dir.mkdir()
       
-    shadow_datasets, _ = split_shadow_dataset(dataset, max(shadow_number, 50))
+    shadow_datasets, _ = split_shadow_dataset(dataset, shadow_number)
 
     for i in range(shadow_number):
       # copy model parameters but we wanna keep the weights randomized
@@ -190,7 +190,7 @@ def get_mia_train_dataset(dataset                  = None,
   # set all shadow models in evaluation mode
   print("\nbuilding the MIA train datasets")
   
-  shadow_datasets_in, shadow_datasets_out = split_shadow_dataset(dataset, max(shadow_number, 50))
+  shadow_datasets_in, shadow_datasets_out = split_shadow_dataset(dataset, shadow_number)
   
   # build the MIA datasets
   input_tensor_lists  = [list() for i in range(class_number)]

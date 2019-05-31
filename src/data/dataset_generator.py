@@ -154,7 +154,7 @@ class Dataset_generator:
     if (not (data_path/'Federal'/'processed'/'train.pt').exists()) or (not (data_path/'Federal'/'processed'/'train.pt').exists()): 
       print('preprocessing of the federal employee dataset')
       df                                   = pd.read_csv(unzipped_file_path)
-      df                                   = df.sample(100000, random_state = 42)
+      df                                   = df.sample(10000, random_state = 42)
       df.EDLVL[df.EDLVL == '**']           = float('nan')
       df.EDLVL                             = df.EDLVL.astype(float)
       df.GSEGRD[df.GSEGRD == '**']         = float('nan')

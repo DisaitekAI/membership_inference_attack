@@ -1,3 +1,11 @@
+import pathlib, sys
+
+home_path = pathlib.Path('.').resolve()
+while home_path.name != 'membership_inference_attack':
+  home_path = home_path.parent
+  
+reports_path = home_path/'reports'
+
 from sklearn.metrics import confusion_matrix, classification_report, balanced_accuracy_score, roc_auc_score, \
                             classification_report, roc_curve
 import matplotlib.pyplot as plt
@@ -9,6 +17,8 @@ import torch
 import time
 import pdb
 from collections import defaultdict
+import seaborn as sns
+import pandas as pd
 
 class Statistics:
   """class used to records statistical data for all experiments.
@@ -280,7 +290,7 @@ class Statistics:
     self._create_resume()
     print(self.resume)
           
-  def _process_mia_dataset(self, dataset):
+  def _process_mia_dataset(self, dataset, klass, save_path):
     """process the mean distribution of input samples from a MIA dataset
     
     Args:
@@ -290,36 +300,96 @@ class Statistics:
       (mean_in_sample (torch Tensor), mean_out_sample (torch Tensor))
       
     """
-    # iterate through attack model classes
     s_in  = []
     s_out = []
+    s_in_miss  = []
+    s_out_miss = []
     
-    #iterate through the samples
     for s_input, s_output in dataset:
-      if s_output == 1:
-        s_in.append(s_input)
+      if torch.argmax(s_input).item() == klass:
+        if s_output == 1:
+          s_in.append(s_input)
+        else:
+          s_out.append(s_input)
       else:
-        s_out.append(s_input)
+        if s_output == 1:
+          s_in_miss.append(s_input)
+        else:
+          s_out_miss.append(s_input)
         
-    s_in  = torch.exp(torch.stack(s_in))
-    s_out = torch.exp(torch.stack(s_out))
+    s_in       = torch.exp(torch.stack(s_in))
+    s_out      = torch.exp(torch.stack(s_out))
     
-    return s_in.mean(dim = 0), s_out.mean(dim = 0)
+    if len(s_in_miss) != 0 and len(s_out_miss) != 0:
+      s_in_miss  = torch.exp(torch.stack(s_in_miss))
+      s_out_miss = torch.exp(torch.stack(s_out_miss))
+    else:
+      s_in_miss  = None
+      s_out_miss = None
     
+    df_in       = pd.DataFrame(s_in.numpy())
+    df_out      = pd.DataFrame(s_out.numpy())
+    
+    df_in_miss  = None
+    df_out_miss = None
+    if s_in_miss is not None:
+      df_in_miss  = pd.DataFrame(s_in_miss.numpy())
+      df_out_miss = pd.DataFrame(s_out_miss.numpy())
+    
+    df_in['training set']       = ['in'  for i in range(len(df_in[0]))]
+    df_out['training set']      = ['out' for i in range(len(df_out[0]))]
+    
+    if s_in_miss is not None:
+      df_in_miss['training set']  = ['in'  for i in range(len(df_in_miss[0]))]
+      df_out_miss['training set'] = ['out' for i in range(len(df_out_miss[0]))]
+    
+    df_in['type']       = ['true positive'  for i in range(len(df_in[0]))]
+    df_out['type']      = ['true positive'  for i in range(len(df_out[0]))]
+    
+    if s_in_miss is not None:
+      df_in_miss['type']  = ['false negative' for i in range(len(df_in_miss[0]))]
+      df_out_miss['type'] = ['false negative' for i in range(len(df_out_miss[0]))]
+    
+    df = df_in.append(df_out, ignore_index = True)
+    
+    if s_in_miss is not None:
+      df = df.append(df_in_miss, ignore_index = True)
+      df = df.append(df_out_miss, ignore_index = True)
+      
+    target_column = f"confidence for class {klass}"
+    df = df.rename(columns = { klass : target_column }) 
+
+    sns.violinplot(x = 'type', y = target_column, 
+                   data = df[[target_column, 'training set', 'type']], 
+                   split = True, hue = 'training set', scale = 'count', 
+                   bw = 0.1, cut = 0)
+    
+    plt.savefig(save_path)
+    plt.clf()
+  
+  def new_report_dir(self):
+    dirs = [x for x in reports_path.iterdir() if reports_path.is_dir()]
+    index = len(dirs)
+    self.report_dir = reports_path/f"statistics_{index}"
+    self.report_dir.mkdir()
+  
   def membership_distributions(self, train_datasets, test_datasets):
     """process the mean distribution of all train and test MIA datasets 
     """
-    current_mia_stats = self.exp[-1]['mia_stats']
+    dirs = [x for x in self.report_dir.iterdir() if self.report_dir.is_dir()]
+    index = len(dirs)
+    self.exp_dir = self.report_dir /f"experiment_{index}"
+    self.exp_dir.mkdir()
     
+    klass = 0
     for dataset in train_datasets:
-      mean_in, mean_out = self._process_mia_dataset(dataset)
-      current_mia_stats['mia_train_in_distribution'].append(mean_in)
-      current_mia_stats['mia_train_out_distribution'].append(mean_out)
-      
+      self._process_mia_dataset(dataset, klass, self.exp_dir/f"mia_train_samples_model_{klass}.pdf")
+      klass += 1
+    
+    klass = 0
     for dataset in test_datasets:
-      mean_in, mean_out = self._process_mia_dataset(dataset)
-      current_mia_stats['mia_test_in_distribution'].append(mean_in)
-      current_mia_stats['mia_test_out_distribution'].append(mean_out)
+      self._process_mia_dataset(dataset, klass, self.exp_dir/f"mia_test_samples_model_{klass}.pdf")
+      klass += 1
 
   def _close_timer(self):
     """
