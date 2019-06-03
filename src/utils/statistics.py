@@ -366,7 +366,7 @@ class Statistics:
                    data = df_plot[[target_column, 'training set', 'type']], 
                    scale = 'count', bw = 0.1, cut = 0)
     
-    plt.savefig(save_path.as_posix() + "_tp.pdf")
+    plt.savefig(save_path.as_posix() + "_tp.png")
     plt.clf()
     
     if s_in_miss is not None:
@@ -378,7 +378,7 @@ class Statistics:
                      data = df_plot[[target_column, 'training set', 'type']], 
                      scale = 'count', bw = 0.1, cut = 0)
       
-      plt.savefig(save_path.as_posix() + "_fn.pdf")
+      plt.savefig(save_path.as_posix() + "_fn.png")
       plt.clf()
         
       # adding all samples under the label "all" to view the whole distribution
@@ -402,7 +402,7 @@ class Statistics:
                      data = df_plot[[target_column, 'training set', 'type']], 
                      scale = 'count', bw = 0.1, cut = 0)
       
-      plt.savefig(save_path.as_posix() + "_all.pdf")
+      plt.savefig(save_path.as_posix() + "_all.png")
       plt.clf()
       
   def new_report_dir(self):
