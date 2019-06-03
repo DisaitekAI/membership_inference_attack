@@ -37,7 +37,7 @@ def main():
              'class_number'           : 10,
              'target_train_epochs'    : 15,
              'shadow_train_epochs'    : 15,
-             'shadow_number'          : 2,
+             'shadow_number'          : 90,
              'custom_mia_model'       : OrderedDict([
                ('dense1'      , nn.Linear(10, 128)),
                ('relu1'       , nn.ReLU()),
@@ -63,22 +63,23 @@ def main():
                ('lsoft', nn.LogSoftmax(dim=1))
              ]),
              'custom_shadow_model'     : OrderedDict([
-               ('conv1', nn.Conv2d(3, 32, 3, 1)),
+               ('conv1', nn.Conv2d(3, 21, 3, 1)),
                ('relu1', nn.ReLU()),
                ('maxp1', nn.MaxPool2d(2, 2)),
-               ('conv2', nn.Conv2d(32, 64, 3, 1)),
+               ('conv2', nn.Conv2d(21, 21, 3, 1)),
                ('relu2', nn.ReLU()),
                ('maxp2', nn.MaxPool2d(2, 2)),
                ('flatt', Flatten()),
-               ('dens1', nn.Linear(6*6*64, 512)),
+               ('dens1', nn.Linear(6*6*21, 512)),
                ('relu3', nn.ReLU()),
                ('dens2', nn.Linear(512, 10)),
                ('lsoft', nn.LogSoftmax(dim=1))
              ]),
              'use_cuda'                   : False,
-             'no_cache'                   : False,
+             'no_cache'                   : True,
              'no_mia_train_dataset_cache' : False,
-             'no_mia_models_cache'        : True,
+             'no_mia_test_dataset_cache'  : False,
+             'no_mia_models_cache'        : False,
              'no_shadow_cache'            : False }
     
   exp_stats.new_experiment(f"Cifar10 MIA", params)

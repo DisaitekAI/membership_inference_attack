@@ -316,7 +316,7 @@ class Statistics:
           s_in_miss.append(s_input)
         else:
           s_out_miss.append(s_input)
-        
+    
     s_in       = torch.exp(torch.stack(s_in))
     s_out      = torch.exp(torch.stack(s_out))
     
@@ -336,37 +336,75 @@ class Statistics:
       df_in_miss  = pd.DataFrame(s_in_miss.numpy())
       df_out_miss = pd.DataFrame(s_out_miss.numpy())
     
-    df_in['training set']       = ['in'  for i in range(len(df_in[0]))]
-    df_out['training set']      = ['out' for i in range(len(df_out[0]))]
+    df_in['training set']  = ['in'  for i in range(len(df_in[0]))]
+    df_out['training set'] = ['out' for i in range(len(df_out[0]))]
     
     if s_in_miss is not None:
       df_in_miss['training set']  = ['in'  for i in range(len(df_in_miss[0]))]
       df_out_miss['training set'] = ['out' for i in range(len(df_out_miss[0]))]
     
-    df_in['type']       = ['true positive'  for i in range(len(df_in[0]))]
-    df_out['type']      = ['true positive'  for i in range(len(df_out[0]))]
+    in_count  = len(df_in)
+    out_count = len(df_out)
+    type_str_in  = f"true positive\nin: {in_count}"
+    type_str_out = f"true positive\nout: {out_count}"
+    df_in['type']  = [type_str_in for i in range(len(df_in[0]))]
+    df_out['type'] = [type_str_out for i in range(len(df_out[0]))]
     
     if s_in_miss is not None:
-      df_in_miss['type']  = ['false negative' for i in range(len(df_in_miss[0]))]
-      df_out_miss['type'] = ['false negative' for i in range(len(df_out_miss[0]))]
+      in_count  = len(df_in_miss)
+      out_count = len(df_out_miss)
+      type_str_in  = f"false negative\nin: {in_count}"
+      type_str_out = f"false negative\nout: {out_count}"
+      df_in_miss['type']  = [type_str_in for i in range(len(df_in_miss[0]))]
+      df_out_miss['type'] = [type_str_out for i in range(len(df_out_miss[0]))]
     
     df = df_in.append(df_out, ignore_index = True)
+    target_column = f"confidence for class {klass}"
+    df_plot = df.rename(columns = { klass : target_column }) 
+
+    sns.violinplot(x = 'type', y = target_column, 
+                   data = df_plot[[target_column, 'training set', 'type']], 
+                   scale = 'count', bw = 0.1, cut = 0)
+    
+    plt.savefig(save_path.as_posix() + "_tp.pdf")
+    plt.clf()
     
     if s_in_miss is not None:
+      df = df_in_miss.append(df_out_miss, ignore_index = True)
+      target_column = f"confidence for class {klass}"
+      df_plot = df.rename(columns = { klass : target_column }) 
+
+      sns.violinplot(x = 'type', y = target_column, 
+                     data = df_plot[[target_column, 'training set', 'type']], 
+                     scale = 'count', bw = 0.1, cut = 0)
+      
+      plt.savefig(save_path.as_posix() + "_fn.pdf")
+      plt.clf()
+        
+      # adding all samples under the label "all" to view the whole distribution
+      in_count  = len(df_in) + len(df_in_miss)
+      out_count = len(df_out) + len(df_out_miss)
+      type_str_in  = f"all\nin: {in_count}"
+      type_str_out = f"all\nout: {out_count}"
+      df_in['type']       = [type_str_in  for i in range(len(df_in[0]))]
+      df_out['type']      = [type_str_out for i in range(len(df_out[0]))]
+      df_in_miss['type']  = [type_str_in  for i in range(len(df_in_miss[0]))]
+      df_out_miss['type'] = [type_str_out for i in range(len(df_out_miss[0]))]
+      
+      df = df_in.append(df_out, ignore_index = True)
       df = df.append(df_in_miss, ignore_index = True)
       df = df.append(df_out_miss, ignore_index = True)
       
-    target_column = f"confidence for class {klass}"
-    df = df.rename(columns = { klass : target_column }) 
+      target_column = f"confidence for class {klass}"
+      df_plot = df.rename(columns = { klass : target_column }) 
 
-    sns.violinplot(x = 'type', y = target_column, 
-                   data = df[[target_column, 'training set', 'type']], 
-                   split = True, hue = 'training set', scale = 'count', 
-                   bw = 0.1, cut = 0)
-    
-    plt.savefig(save_path)
-    plt.clf()
-  
+      sns.violinplot(x = 'type', y = target_column, 
+                     data = df_plot[[target_column, 'training set', 'type']], 
+                     scale = 'count', bw = 0.1, cut = 0)
+      
+      plt.savefig(save_path.as_posix() + "_all.pdf")
+      plt.clf()
+      
   def new_report_dir(self):
     dirs = [x for x in reports_path.iterdir() if reports_path.is_dir()]
     index = len(dirs)
@@ -380,15 +418,14 @@ class Statistics:
     index = len(dirs)
     self.exp_dir = self.report_dir /f"experiment_{index}"
     self.exp_dir.mkdir()
-    
     klass = 0
     for dataset in train_datasets:
-      self._process_mia_dataset(dataset, klass, self.exp_dir/f"mia_train_samples_model_{klass}.pdf")
+      self._process_mia_dataset(dataset, klass, self.exp_dir/f"mia_train_samples_model_{klass}")
       klass += 1
     
     klass = 0
     for dataset in test_datasets:
-      self._process_mia_dataset(dataset, klass, self.exp_dir/f"mia_test_samples_model_{klass}.pdf")
+      self._process_mia_dataset(dataset, klass, self.exp_dir/f"mia_test_samples_model_{klass}")
       klass += 1
 
   def _close_timer(self):
