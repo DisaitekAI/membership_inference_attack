@@ -1,6 +1,8 @@
 import pathlib, sys
 import torch
 
+# ~ torch.set_printoptions(threshold=sys.maxsize)
+
 home_path = pathlib.Path('.').resolve()
 while home_path.name != 'membership_inference_attack':
   home_path = home_path.parent

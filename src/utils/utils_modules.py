@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from statistics import Statistics
 from torch.nn import init
 
 class Flatten(nn.Module):
@@ -10,6 +9,8 @@ class Flatten(nn.Module):
   def forward(self, x):
     return x.view(x.size()[0], -1)
     
+from statistics import Statistics
+
 class Print(nn.Module):
   """print the inputs and/or the shape of a layer. Used to debug models 
   built with an OrderedDict.  
@@ -140,6 +141,7 @@ def train(model, device, train_loader, optimizer, epoch, verbose = True, class_w
     output = model(*input_list)
     
     loss = F.nll_loss(output, target, weight = class_weights)
+    # ~ loss = torch.nn.CrossEntropyLoss()(output, target)
     loss.backward()
     optimizer.step()
     
@@ -189,6 +191,7 @@ def test(model, device, test_loader, verbose = True, class_weights = None, test_
 
       output = model(*input_list)
       test_loss += F.nll_loss(output, target, reduction = 'sum', weight = class_weights).item() # sum up batch loss
+      # ~ test_loss += torch.nn.CrossEntropyLoss()(output, target)
       pred = output.argmax(dim = 1, keepdim = True) # get the index of the max log-probability
       
       correct += pred.eq(target.view_as(pred)).sum().item()

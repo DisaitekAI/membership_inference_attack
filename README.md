@@ -1,7 +1,10 @@
 membership_inference_attack
 ==============================
 
-Implementation of attack and defense from the paper "Membership Inference Attacks Against Machine Learning Models"
+Implementation for the experiments in the blogpost "Demystifying the 
+Membership Inference Attack" at 
+https://www.mlsecurity.ai/post/demystifying-the-membership-inference-attack 
+
 
 Project Organization
 ------------

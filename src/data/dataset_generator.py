@@ -244,7 +244,14 @@ class Dataset_generator:
                            transforms.ToTensor(),
                            transforms.Normalize((0.1307,), (0.3081,))
                          ]))
-    
+                         
+  def fashion_mnist(self):
+    return datasets.FashionMNIST(data_path.as_posix(), train=self.train, download=True,
+                                  transform = transforms.Compose([
+                                  transforms.ToTensor(),
+                                  transforms.Normalize((0.5,), (0.5,))
+                                ]))
+                         
   def purchase(self):
     # download the preprocessed data
     if not (data_path/'Purchase').exists():
@@ -331,6 +338,9 @@ class Dataset_generator:
     if self.method == 'academic':
       if self.name == 'mnist':
         return self.mnist()
+        
+      if self.name == 'fashionmnist':
+        return self.fashion_mnist()
     
       if self.name == 'purchase':
         return self.purchase()

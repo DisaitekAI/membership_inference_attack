@@ -238,6 +238,7 @@ def experiment(academic_dataset           = None,
   cuda_args = { 'num_workers' : 1, 'pin_memory' : False } if use_cuda else {}
   
   shadow_swarm_dataset = None
+  shadow_test_set = None
   shadow_dir = pathlib.Path(shadow_model_base_path).parent
   if not shadow_dir.exists():
     shadow_dir.mkdir()
@@ -259,8 +260,13 @@ def experiment(academic_dataset           = None,
       train_loader = torch.utils.data.DataLoader(train_set, batch_size = target_batch_size, 
                                                  shuffle = True, **cuda_args)
       
+      
       dg = Dataset_generator(method = 'academic', name = academic_dataset, train = False)
       test_set = dg.generate()
+      
+      half_len = int(len(test_set) / 2)
+      test_set, shadow_test_set = fixed_random_split(test_set, [half_len, len(test_set) - half_len])
+      
       test_loader = torch.utils.data.DataLoader(test_set, batch_size = 1000, shuffle = True, **cuda_args)
       
       model = None
@@ -297,14 +303,21 @@ def experiment(academic_dataset           = None,
       train_set = dg.generate()
       half_len = int(len(train_set) / 2)
       _, shadow_swarm_dataset = fixed_random_split(train_set, [half_len, len(train_set) - half_len])
+      
+      dg = Dataset_generator(method = 'academic', name = academic_dataset, train = False)
+      test_set = dg.generate()
+      half_len = int(len(test_set) / 2)
+      _, shadow_test_set = fixed_random_split(test_set, [half_len, len(test_set) - half_len])
   
   shadow_model = None
   if custom_shadow_model is None:
     shadow_model = torch.load(target_model_path).to(device)
   else:
     shadow_model = nn.Sequential(custom_shadow_model).to(device)
-    
-  mia_train_datasets = get_mia_train_dataset(shadow_swarm_dataset, shadow_number, 
+ 
+  mia_train_datasets = get_mia_train_dataset(shadow_swarm_dataset, 
+                                             shadow_test_set,
+                                             shadow_number, 
                                              shadow_model, use_cuda, 
                                              custom_shadow_optim_args,
                                              shadow_model_base_path,
@@ -320,6 +333,8 @@ def experiment(academic_dataset           = None,
   
   dg = Dataset_generator(method = 'academic', name = academic_dataset, train = False)
   test_set = dg.generate()
+  half_len = int(len(test_set) / 2)
+  test_set, _ = fixed_random_split(test_set, [half_len, len(test_set) - half_len])
   
   target_model = None
   if custom_target_model is None:
@@ -333,7 +348,7 @@ def experiment(academic_dataset           = None,
                                            use_cuda,
                                            mia_test_dataset_path,
                                            class_number)  
-
+                                           
   stats.membership_distributions(mia_train_datasets, mia_test_datasets)
 
   mia_models = list()
@@ -358,14 +373,17 @@ def experiment(academic_dataset           = None,
     model.apply(weight_init)
 
     optimizer = optim.Adam(model.parameters(), **optim_args)  
-                                                        
+    
+    balanced_train_dataset = BalancedSampler(mia_train_datasets[i])
     train_loader = torch.utils.data.DataLoader(mia_train_datasets[i], batch_size = mia_batch_size, 
-                                               shuffle = True, **cuda_args)    
+                                               sampler = balanced_train_dataset, **cuda_args)    
                                                         
     balanced_test_dataset = BalancedSampler(mia_test_datasets[i])
     test_loader  = torch.utils.data.DataLoader(mia_test_datasets[i], batch_size = 1000, 
                                                sampler = balanced_test_dataset, **cuda_args)
-                                               
+                             
+    print(f"attack training dataset size: {len(train_loader)}")
+    print(f"attack test dataset size: {len(test_loader)}")
     stats.new_train(name = f"MIA model {i}", label = "mia-model")                                                                          
     for epoch in range(mia_train_epochs):
       stats.new_epoch()

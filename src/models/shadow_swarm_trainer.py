@@ -14,33 +14,21 @@ import torch.utils.data
 import torch.optim as optim
 from copy import deepcopy
 from utils_modules import weight_init, train, test
-from miscellaneous import progress_bar, fixed_random_split
+from miscellaneous import progress_bar, fixed_random_split, fixed_random_subset
 from torch.utils.data import TensorDataset
 
-def split_shadow_dataset(dataset, shadow_number):
-  dataset_size = len(dataset)
-  base_dataset_size = dataset_size // shadow_number
+def split_shadow_dataset(train_set, test_set, shadow_number, data_size = 5000):
+  shadow_datasets_in  = []
+  shadow_datasets_out = []
   
-  # set the dataset size for (shadow_number-1) shadows
-  shadow_datasets_sizes = []
-  for i in range(shadow_number - 1):
-    shadow_datasets_sizes.append(base_dataset_size)
-    
-  # last size is the remaining size for the last shadow
-  shadow_datasets_sizes.append(dataset_size - (base_dataset_size * (shadow_number - 1))) 
-  
-  # split the dataset into almost equal sizes
-  shadow_datasets_in = fixed_random_split(dataset, shadow_datasets_sizes)
-  
-  # the out samples are taken from the shadow number i-1 
-  shadow_datasets_out = [shadow_datasets_in[0]]
-  for i in range(1, shadow_number):
-    shadow_datasets_out.append(shadow_datasets_in[i-1])
+  for i in range(shadow_number):
+    shadow_datasets_in.append(fixed_random_subset(train_set, data_size, i))
+    shadow_datasets_out.append(fixed_random_subset(test_set, data_size, i))
   
   return shadow_datasets_in, shadow_datasets_out
   
-
 def get_mia_train_dataset(dataset                  = None, 
+                          test_set                 = None,
                           shadow_number            = None, 
                           shadow_model             = None, 
                           use_cuda                 = False,
@@ -139,7 +127,7 @@ def get_mia_train_dataset(dataset                  = None,
     if not shadow_dir.exists():
       shadow_dir.mkdir()
       
-    shadow_datasets, _ = split_shadow_dataset(dataset, shadow_number)
+    shadow_train_datasets, shadow_test_datasets = split_shadow_dataset(dataset, test_set, shadow_number)
 
     for i in range(shadow_number):
       # copy model parameters but we wanna keep the weights randomized
@@ -162,13 +150,9 @@ def get_mia_train_dataset(dataset                  = None,
       model = shadow_models[i].to(device)
       model.apply(weight_init)
       
-      j = 0
-      if j == i:
-        j = 1
-      
-      train_loader = torch.utils.data.DataLoader(shadow_datasets[i], batch_size = shadow_batch_size, 
+      train_loader = torch.utils.data.DataLoader(shadow_train_datasets[i], batch_size = shadow_batch_size, 
                                                  shuffle = True, **cuda_args)
-      test_loader = torch.utils.data.DataLoader(shadow_datasets[j], batch_size = 1000, 
+      test_loader = torch.utils.data.DataLoader(shadow_test_datasets[i], batch_size = 1000, 
                                                 shuffle = True, **cuda_args)
                                                 
       optim_args = {}
@@ -190,7 +174,7 @@ def get_mia_train_dataset(dataset                  = None,
   # set all shadow models in evaluation mode
   print("\nbuilding the MIA train datasets")
   
-  shadow_datasets_in, shadow_datasets_out = split_shadow_dataset(dataset, shadow_number)
+  shadow_datasets_in, shadow_datasets_out = split_shadow_dataset(dataset, test_set, shadow_number)
   
   # build the MIA datasets
   input_tensor_lists  = [list() for i in range(class_number)]
@@ -213,8 +197,11 @@ def get_mia_train_dataset(dataset                  = None,
         outputs = current_shadow(*data)
         
         for target, output in zip(targets, outputs):
-          input_tensor_lists[target].append(output)
-          output_tensor_lists[target].append(torch.tensor(1))
+          # ~ input_tensor_lists[target].append(output)
+          # ~ output_tensor_lists[target].append(torch.tensor(1))
+          if torch.argmax(output).item() == target.item():
+            input_tensor_lists[target].append(output)
+            output_tensor_lists[target].append(torch.tensor(1))
     
     data_out_loader = torch.utils.data.DataLoader(shadow_datasets_out[i], 
                        batch_size = 1000, shuffle = True, **cuda_args)
@@ -229,8 +216,11 @@ def get_mia_train_dataset(dataset                  = None,
         outputs = current_shadow(*data)
         
         for target, output in zip(targets, outputs):
-          input_tensor_lists[target].append(output)
-          output_tensor_lists[target].append(torch.tensor(0))
+          # ~ input_tensor_lists[target].append(output)
+          # ~ output_tensor_lists[target].append(torch.tensor(0))
+          if torch.argmax(output).item() == target.item():
+            input_tensor_lists[target].append(output)
+            output_tensor_lists[target].append(torch.tensor(0))
   
   i = 0
   mia_datasets = list()
@@ -315,8 +305,11 @@ def get_mia_test_dataset(train_dataset    = None,
       outputs = target_model(*data)
       
       for target, output in zip(targets, outputs):
-        input_tensor_lists[target].append(output)
-        output_tensor_lists[target].append(torch.tensor(1))
+        # ~ input_tensor_lists[target].append(output)
+        # ~ output_tensor_lists[target].append(torch.tensor(1))
+        if torch.argmax(output).item() == target.item():
+          input_tensor_lists[target].append(output)
+          output_tensor_lists[target].append(torch.tensor(1))
   
   data_out_loader = torch.utils.data.DataLoader(test_dataset, batch_size = 1000, 
                                                 shuffle = True, **cuda_args)
@@ -331,8 +324,11 @@ def get_mia_test_dataset(train_dataset    = None,
       outputs = target_model(*data)
       
       for target, output in zip(targets, outputs):
-        input_tensor_lists[target].append(output)
-        output_tensor_lists[target].append(torch.tensor(0))
+        # ~ input_tensor_lists[target].append(output)
+        # ~ output_tensor_lists[target].append(torch.tensor(0))
+        if torch.argmax(output).item() == target.item():
+          input_tensor_lists[target].append(output)
+          output_tensor_lists[target].append(torch.tensor(0))
   
   i = 0
   mia_datasets = list()

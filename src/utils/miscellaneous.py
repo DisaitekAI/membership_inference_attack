@@ -43,6 +43,23 @@ def fixed_random_split(dataset, lengths):
   
   return [Subset(dataset, indices[offset - length:offset]) for offset, length in zip(_accumulate(lengths), lengths)]
   
+def fixed_random_subset(dataset, length, seed = 0):
+  """Randomly subset a dataset with a given seed
+
+  Args:
+    dataset (torch Dataset): dataset to be split.
+    length (int): length of the subset
+    seed (int): seed for the random sample picking
+  """
+  if length > len(dataset):
+    length = len(dataset) 
+  
+  torch.manual_seed(seed)
+  indices = randperm(len(dataset))
+  torch.manual_seed(datetime.datetime.now().timestamp())
+  
+  return Subset(dataset, indices[0:length])
+  
 class BalancedSampler(torch.utils.data.sampler.Sampler):
   """Sampler that draws around the same amount of sample for each class.
   """

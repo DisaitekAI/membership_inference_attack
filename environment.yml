@@ -3,12 +3,13 @@ channels:
   - pytorch
   - defaults
 dependencies:
+  - _libgcc_mutex=0.1=main
   - attrs=19.1.0=py37_1
   - backcall=0.1.0=py37_0
   - blas=1.0=mkl
   - bleach=3.1.0=py37_0
-  - ca-certificates=2019.1.23=0
-  - certifi=2019.3.9=py37_0
+  - ca-certificates=2019.8.28=0
+  - certifi=2019.9.11=py37_0
   - cffi=1.12.2=py37h2e261b9_1
   - cudatoolkit=9.0=h13b8566_0
   - dbus=1.13.6=h746ee38_0
@@ -60,10 +61,11 @@ dependencies:
   - numpy=1.16.2=py37h7e9f1db_0
   - numpy-base=1.16.2=py37hde5b4d6_0
   - olefile=0.46=py37_0
-  - openssl=1.1.1b=h7b6447c_1
+  - openssl=1.1.1d=h7b6447c_1
   - pandoc=2.2.3.2=0
   - pandocfilters=1.4.2=py37_1
   - parso=0.3.4=py37_0
+  - patsy=0.5.1=py37_0
   - pcre=8.43=he6710b0_0
   - pexpect=4.6.0=py37_0
   - pickleshare=0.7.5=py37_0
@@ -83,11 +85,13 @@ dependencies:
   - qt=5.9.7=h5867ecd_1
   - qtconsole=4.4.3=py37_0
   - readline=7.0=h7b6447c_5
+  - seaborn=0.9.0=py37_0
   - send2trash=1.5.0=py37_0
   - setuptools=40.8.0=py37_0
   - sip=4.19.8=py37hf484d3e_0
   - six=1.12.0=py37_0
   - sqlite=3.27.2=h7b6447c_0
+  - statsmodels=0.10.1=py37hdd07704_0
   - terminado=0.8.1=py37_1
   - testpath=0.4.2=py37_0
   - tk=8.6.8=hbc83047_0
@@ -106,7 +110,6 @@ dependencies:
     - arrow==0.13.1
     - binaryornot==0.4.4
     - chardet==3.0.4
-    - click==7.0
     - cookiecutter==1.6.0
     - cycler==0.10.0
     - future==0.17.1
@@ -123,5 +126,5 @@ dependencies:
     - scipy==1.2.1
     - urllib3==1.24.1
     - whichcraft==0.5.2
-prefix: /home/rodgzilla/anaconda3/envs/memb_inf_attack
+prefix: /home/infected/anaconda3/envs/memb_inf_attack
 
